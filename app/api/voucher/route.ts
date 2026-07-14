@@ -4,6 +4,7 @@ import {
   findLeadByCpf,
   findLeadByPhone,
   findVoucherByLeadId,
+  insertEmailEvent,
   insertLead,
   insertVoucher,
 } from "@/lib/store";
@@ -153,7 +154,21 @@ export async function POST(req: NextRequest) {
     qrUrl: `${base}/api/qr/${code}`,
     logoUrl: `${base}/brand/logo/wg-horizontal-bege.png`,
     mapsUrl: VENUE.mapsUrl,
-  }).catch((e) => console.error("[voucher] email send failed", e));
+  })
+    .then((r) => {
+      if ("id" in r && r.id) {
+        return insertEmailEvent({
+          id: newId(),
+          resend_id: r.id,
+          email,
+          voucher_code: code,
+          type: "sent",
+          created_at: new Date().toISOString(),
+          raw: null,
+        });
+      }
+    })
+    .catch((e) => console.error("[voucher] email send failed", e));
 
   try {
     const qrDataUrl = await buildQrDataUrl(voucher.qr_payload);

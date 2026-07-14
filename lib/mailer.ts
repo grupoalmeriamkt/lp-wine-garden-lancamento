@@ -21,7 +21,8 @@ export async function sendVoucherEmail(to: string, data: VoucherEmailData) {
     to,
     subject: voucherEmailSubject(data.name),
     html: buildVoucherEmailHtml(data),
+    tags: [{ name: "voucher_code", value: data.code }],
   });
   if (error) throw new Error(error.message);
-  return { id: sent?.id, skipped: false };
+  return { id: sent?.id, to, code: data.code };
 }
