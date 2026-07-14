@@ -1,18 +1,28 @@
 import { NextRequest, NextResponse } from "next/server";
 import QRCode from "qrcode";
-import { findLeadByPhone, findVoucherByLeadId, insertLead, insertVoucher } from "@/lib/store";
+import {
+  findLeadByCpf,
+  findLeadByPhone,
+  findVoucherByLeadId,
+  insertLead,
+  insertVoucher,
+} from "@/lib/store";
 import {
   buildQrPayload,
   defaultExpiry,
   generateVoucherCode,
   isAdult,
+  isValidCpf,
+  isValidEmail,
   isValidPhone,
   newId,
+  normalizeCpf,
   normalizePhone,
 } from "@/lib/voucher";
-import { glassById } from "@/lib/glasses";
+import { glassById, glassLabel } from "@/lib/glasses";
+import { CAMPAIGN, VENUE } from "@/lib/config";
 import type { Lead, Voucher } from "@/lib/types";
-import { sendVoucherEmail } from "@/lib/voucherEmail";
+import { sendVoucherEmail } from "@/lib/mailer";
 
 export const runtime = "nodejs";
 
@@ -26,9 +36,10 @@ export async function POST(req: NextRequest) {
 
   const name = String(body.name ?? "").trim();
   const rawPhone = String(body.phone ?? "").trim();
+  const rawCpf = String(body.cpf ?? "").trim();
   const birth_date = String(body.birth_date ?? "").trim();
   const selected_glass = String(body.selected_glass ?? "").trim();
-  const email = body.email ? String(body.email).trim() : null;
+  const email = String(body.email ?? "").trim();
   const has_visited_before = body.has_visited_before
     ? String(body.has_visited_before)
     : null;
@@ -40,6 +51,12 @@ export async function POST(req: NextRequest) {
   if (!isValidPhone(rawPhone)) {
     return NextResponse.json({ error: "invalid_phone" }, { status: 422 });
   }
+  if (!isValidEmail(email)) {
+    return NextResponse.json({ error: "invalid_email" }, { status: 422 });
+  }
+  if (!isValidCpf(rawCpf)) {
+    return NextResponse.json({ error: "invalid_cpf" }, { status: 422 });
+  }
   if (!birth_date || !isAdult(birth_date)) {
     return NextResponse.json({ error: "not_adult" }, { status: 422 });
   }
@@ -48,6 +65,10 @@ export async function POST(req: NextRequest) {
   }
 
   const phone = normalizePhone(rawPhone);
+  const cpf = normalizeCpf(rawCpf);
+
+  const siteUrl =
+    process.env.NEXT_PUBLIC_SITE_URL || req.nextUrl.origin || "http://localhost:3000";
 
   async function buildQrDataUrl(payload: string) {
     return QRCode.toDataURL(payload, {
@@ -69,16 +90,16 @@ export async function POST(req: NextRequest) {
           { status: 200 }
         );
       } catch (e) {
-        return NextResponse.json(
-          { error: "qr_failed", detail: String(e) },
-          { status: 500 }
-        );
+        return NextResponse.json({ error: "qr_failed", detail: String(e) }, { status: 500 });
       }
     }
-    return NextResponse.json(
-      { error: "phone_already_registered" },
-      { status: 409 }
-    );
+    return NextResponse.json({ error: "phone_already_registered" }, { status: 409 });
+  }
+
+  // --- One voucher per CPF ---
+  const byCpf = await findLeadByCpf(cpf);
+  if (byCpf) {
+    return NextResponse.json({ error: "cpf_already_registered" }, { status: 409 });
   }
 
   const nowIso = new Date().toISOString();
@@ -86,6 +107,7 @@ export async function POST(req: NextRequest) {
     id: newId(),
     name,
     phone,
+    cpf,
     email,
     birth_date,
     has_visited_before,
@@ -99,10 +121,6 @@ export async function POST(req: NextRequest) {
     created_at: nowIso,
   };
 
-  const siteUrl =
-    process.env.NEXT_PUBLIC_SITE_URL ||
-    req.nextUrl.origin ||
-    "http://localhost:3000";
   const code = generateVoucherCode();
   const voucher: Voucher = {
     id: newId(),
@@ -121,22 +139,26 @@ export async function POST(req: NextRequest) {
     await insertLead(lead);
     await insertVoucher(voucher);
   } catch (e) {
-    return NextResponse.json(
-      { error: "persist_failed", detail: String(e) },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: "persist_failed", detail: String(e) }, { status: 500 });
   }
+
+  // Envio do e-mail de confirmação — não bloqueia a resposta nem falha o cadastro.
+  const base = siteUrl.replace(/\/$/, "");
+  void sendVoucherEmail(email, {
+    name,
+    glassName: glassLabel(selected_glass),
+    code,
+    validade: `${CAMPAIGN.courtesyPeriod.label} de 2026`,
+    voucherUrl: voucher.qr_payload,
+    qrUrl: `${base}/api/qr/${code}`,
+    logoUrl: `${base}/brand/logo/wg-horizontal-bege.png`,
+    mapsUrl: VENUE.mapsUrl,
+  }).catch((e) => console.error("[voucher] email send failed", e));
 
   try {
     const qrDataUrl = await buildQrDataUrl(voucher.qr_payload);
-    if (email) {
-      void sendVoucherEmail({ to: email, lead, voucher, qrDataUrl });
-    }
     return NextResponse.json({ voucher, lead, qrDataUrl }, { status: 201 });
   } catch (e) {
-    return NextResponse.json(
-      { error: "qr_failed", detail: String(e) },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: "qr_failed", detail: String(e) }, { status: 500 });
   }
 }

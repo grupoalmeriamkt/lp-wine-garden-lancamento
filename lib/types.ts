@@ -1,8 +1,9 @@
 export interface LeadInput {
   name: string;
   phone: string;
+  cpf: string; // dígitos (11)
   birth_date: string; // YYYY-MM-DD
-  email?: string | null;
+  email: string;
   has_visited_before?: string | null;
   selected_glass: string;
   source?: string | null;

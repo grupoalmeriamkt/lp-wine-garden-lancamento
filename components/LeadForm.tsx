@@ -4,7 +4,10 @@ import Reveal from "./Reveal";
 import { glassById, GlassId } from "@/lib/glasses";
 import {
   formatBrBirthInput,
+  formatCpf,
   isAdult,
+  isValidCpf,
+  isValidEmail,
   isValidPhone,
   parseBrBirthdate,
 } from "@/lib/voucher";
@@ -39,6 +42,12 @@ function errorMessageFromCode(code: string): string {
       return "Informe seu nome completo.";
     case "invalid_phone":
       return "Informe um telefone válido com DDD.";
+    case "invalid_email":
+      return "Informe um e-mail válido.";
+    case "invalid_cpf":
+      return "Informe um CPF válido.";
+    case "cpf_already_registered":
+      return "Este CPF já resgatou um convite. Uma cortesia por pessoa.";
     case "invalid_glass":
       return "Selecione uma taça antes de continuar.";
     case "qr_failed":
@@ -62,6 +71,7 @@ export default function LeadForm({
 }) {
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
+  const [cpf, setCpf] = useState("");
   const [birth, setBirth] = useState("");
   const [birthDisplay, setBirthDisplay] = useState("");
   const [isMobile, setIsMobile] = useState(false);
@@ -97,6 +107,8 @@ export default function LeadForm({
     const e: Record<string, string> = {};
     if (name.trim().length < 2) e.name = "Informe seu nome completo.";
     if (!isValidPhone(phone)) e.phone = "Informe um telefone válido com DDD.";
+    if (!isValidEmail(email)) e.email = "Informe um e-mail válido.";
+    if (!isValidCpf(cpf)) e.cpf = "Informe um CPF válido.";
     if (!birth) {
       e.birth =
         isMobile && birthDisplay.replace(/\D/g, "").length > 0
@@ -125,8 +137,9 @@ export default function LeadForm({
         body: JSON.stringify({
           name: name.trim(),
           phone,
+          cpf,
           birth_date: birth,
-          email: email.trim() || null,
+          email: email.trim(),
           has_visited_before: visit || null,
           selected_glass: glass,
           ...utms,
@@ -190,8 +203,8 @@ export default function LeadForm({
         <Reveal delay={100}>
           <p className="body muted center" style={{ marginBottom: 12 }}>
             Taça escolhida:{" "}
-            <strong style={{ color: "var(--granada)" }}>{g?.name}</strong>. Não pedimos
-            CPF neste primeiro momento.
+            <strong style={{ color: "var(--granada)" }}>{g?.name}</strong>. Leva menos de
+            um minuto.
           </p>
         </Reveal>
 
@@ -227,6 +240,19 @@ export default function LeadForm({
             </div>
 
             <div className="field">
+              <label htmlFor="cpf">CPF</label>
+              <input
+                id="cpf"
+                inputMode="numeric"
+                placeholder="000.000.000-00"
+                value={cpf}
+                onChange={(e) => setCpf(formatCpf(e.target.value))}
+                autoComplete="off"
+              />
+              {errors.cpf && <span className="error">{errors.cpf}</span>}
+            </div>
+
+            <div className="field">
               <label htmlFor="birth">Data de nascimento</label>
               {isMobile ? (
                 <input
@@ -259,14 +285,17 @@ export default function LeadForm({
             </div>
 
             <div className="field">
-              <label htmlFor="email">E-mail (opcional)</label>
+              <label htmlFor="email">E-mail</label>
               <input
                 id="email"
                 type="email"
+                placeholder="voce@email.com"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 autoComplete="email"
               />
+              <span className="hint">Enviaremos seu convite também por e-mail.</span>
+              {errors.email && <span className="error">{errors.email}</span>}
             </div>
 
             <div className="field">

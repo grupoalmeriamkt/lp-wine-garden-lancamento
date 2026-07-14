@@ -47,6 +47,22 @@ export async function findLeadByPhone(phone: string): Promise<Lead | null> {
   return leads.find((l) => l.phone === phone) ?? null;
 }
 
+export async function findLeadByCpf(cpf: string): Promise<Lead | null> {
+  if (!cpf) return null;
+  const sb = getSupabaseAdmin();
+  if (sb) {
+    const { data } = await sb
+      .from("winegarden_leads")
+      .select("*")
+      .eq("cpf", cpf)
+      .limit(1)
+      .maybeSingle();
+    return (data as Lead) ?? null;
+  }
+  const leads = await readJson<Lead>(LEADS_FILE);
+  return leads.find((l) => l.cpf === cpf) ?? null;
+}
+
 export async function insertLead(lead: Lead): Promise<Lead> {
   const sb = getSupabaseAdmin();
   if (sb) {
