@@ -15,7 +15,6 @@ export default function ValidarPage({
 }) {
   const { code } = use(params);
   const [state, setState] = useState<State>({ s: "loading" });
-  const [busy, setBusy] = useState(false);
 
   async function load() {
     setState({ s: "loading" });
@@ -32,29 +31,6 @@ export default function ValidarPage({
     load();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [code]);
-
-  async function redeem() {
-    setBusy(true);
-    const res = await fetch(`/api/voucher/${code}`, {
-      method: "POST",
-      headers: { "content-type": "application/json" },
-      body: JSON.stringify({ action: "redeem", redeemed_by: "staff" }),
-    });
-    const data = await res.json();
-    setBusy(false);
-    if (!res.ok) {
-      alert(
-        data.error === "already_redeemed"
-          ? "Convite já resgatado."
-          : data.error === "expired"
-          ? "Convite expirado."
-          : "Não foi possível resgatar."
-      );
-      load();
-      return;
-    }
-    setState({ s: "ok", voucher: data.voucher });
-  }
 
   const statusColor: Record<string, string> = {
     active: "var(--oliva)",
@@ -93,9 +69,10 @@ export default function ValidarPage({
             </p>
 
             {state.voucher.status === "active" && (
-              <button className="btn" style={{ width: "100%", justifyContent: "center", marginTop: 24 }} disabled={busy} onClick={redeem}>
-                {busy ? "Resgatando…" : "Resgatar convite"}
-              </button>
+              <p className="body muted" style={{ marginTop: 24, fontSize: "0.9rem" }}>
+                Apresente este convite à equipe Wine Garden na entrada. O resgate
+                é feito pela equipe no momento da chegada.
+              </p>
             )}
           </>
         )}
