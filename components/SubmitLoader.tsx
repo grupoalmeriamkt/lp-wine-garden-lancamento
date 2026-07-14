@@ -16,18 +16,9 @@ const WINE_PATH =
   "M141.57,245.4c-9.81,8.84-21.42,15.19-34.1,18.85-12.59,3.64-25.17,2.35-37.1-2.72-11.24-4.78-21.19-11.64-29.64-20.38-5.38-6.27-10.4-12.24-14.06-19.7-8.11-16.56-10.99-34.83-9.73-53.38l151.95.02c1.8,21.08-1.82,40.86-12.24,59.23-4.58,6.53-9.1,12.7-15.07,18.08Z";
 
 export default function SubmitLoader() {
-  const [mounted, setMounted] = useState(false);
   const [step, setStep] = useState(0);
 
   useEffect(() => {
-    setMounted(true);
-  }, []);
-
-  useEffect(() => {
-    if (!mounted) return;
-
-    document.body.classList.add("overlay-open");
-    document.body.style.overflow = "hidden";
     const timers = [
       setTimeout(() => setStep(1), 1400),
       setTimeout(() => setStep(2), 2800),
@@ -35,12 +26,10 @@ export default function SubmitLoader() {
 
     return () => {
       timers.forEach(clearTimeout);
-      document.body.classList.remove("overlay-open");
-      document.body.style.overflow = "";
     };
-  }, [mounted]);
+  }, []);
 
-  if (!mounted) return null;
+  if (typeof document === "undefined") return null;
 
   return createPortal(
     <div className="submit-loader" role="status" aria-live="polite" aria-busy="true">

@@ -81,6 +81,22 @@ export async function insertVoucher(voucher: Voucher): Promise<Voucher> {
   return voucher;
 }
 
+export async function findVoucherByLeadId(leadId: string): Promise<Voucher | null> {
+  const sb = getSupabaseAdmin();
+  if (sb) {
+    const { data } = await sb
+      .from("winegarden_vouchers")
+      .select("*")
+      .eq("lead_id", leadId)
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+    return (data as Voucher) ?? null;
+  }
+  const vouchers = await readJson<Voucher>(VOUCHERS_FILE);
+  return vouchers.find((v) => v.lead_id === leadId) ?? null;
+}
+
 export async function findVoucherByCode(code: string): Promise<Voucher | null> {
   const sb = getSupabaseAdmin();
   if (sb) {

@@ -23,6 +23,32 @@ function wait(ms: number) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
+function isCreateVoucherResult(data: unknown): data is CreateVoucherResult {
+  if (!data || typeof data !== "object") return false;
+  const d = data as Partial<CreateVoucherResult>;
+  return Boolean(d.voucher?.voucher_code && d.lead?.name && d.qrDataUrl);
+}
+
+function errorMessageFromCode(code: string): string {
+  switch (code) {
+    case "phone_already_registered":
+      return "Este telefone já resgatou um convite. Uma cortesia por telefone.";
+    case "not_adult":
+      return "Convite válido apenas para maiores de 18 anos.";
+    case "invalid_name":
+      return "Informe seu nome completo.";
+    case "invalid_phone":
+      return "Informe um telefone válido com DDD.";
+    case "invalid_glass":
+      return "Selecione uma taça antes de continuar.";
+    case "qr_failed":
+    case "persist_failed":
+      return "Não foi possível gerar seu convite agora. Tente novamente em instantes.";
+    default:
+      return "Não foi possível gerar seu convite. Tente novamente.";
+  }
+}
+
 export default function LeadForm({
   glass,
   onSubmitStart,
@@ -32,7 +58,7 @@ export default function LeadForm({
   glass: GlassId;
   onSubmitStart: () => void;
   onSuccess: (r: CreateVoucherResult) => void;
-  onError: () => void;
+  onError: (message: string) => void;
 }) {
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
@@ -106,29 +132,41 @@ export default function LeadForm({
           ...utms,
         }),
       });
-      const data = await res.json();
+
+      let data: Record<string, unknown> = {};
+      try {
+        data = (await res.json()) as Record<string, unknown>;
+      } catch {
+        const message = "Resposta inválida do servidor. Tente novamente.";
+        setServerError(message);
+        onError(message);
+        return;
+      }
+
       if (!res.ok) {
-        if (data.error === "phone_already_registered") {
-          setServerError(
-            "Este telefone já resgatou um convite. Uma cortesia por telefone."
-          );
-        } else if (data.error === "not_adult") {
-          setServerError("Convite válido apenas para maiores de 18 anos.");
-        } else {
-          setServerError("Não foi possível gerar seu convite. Tente novamente.");
-        }
-        onError();
+        const code = typeof data.error === "string" ? data.error : "unknown";
+        const message = errorMessageFromCode(code);
+        setServerError(message);
+        onError(message);
+        return;
+      }
+
+      if (!isCreateVoucherResult(data)) {
+        const message = "Não foi possível montar seu convite. Tente novamente.";
+        setServerError(message);
+        onError(message);
         return;
       }
 
       const remaining = SUBMIT_DELAY_MS - (Date.now() - startedAt);
       if (remaining > 0) await wait(remaining);
 
-      track("voucher_created", { glass, code: data.voucher?.voucher_code });
-      onSuccess(data as CreateVoucherResult);
+      track("voucher_created", { glass, code: data.voucher.voucher_code });
+      onSuccess(data);
     } catch {
-      setServerError("Erro de conexão. Tente novamente.");
-      onError();
+      const message = "Erro de conexão. Verifique sua internet e tente novamente.";
+      setServerError(message);
+      onError(message);
     } finally {
       setLoading(false);
     }

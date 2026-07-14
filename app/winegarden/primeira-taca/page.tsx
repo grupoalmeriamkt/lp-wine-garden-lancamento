@@ -13,6 +13,7 @@ import Closing from "@/components/Closing";
 import Footer from "@/components/Footer";
 import VoucherCard from "@/components/VoucherCard";
 import SubmitLoader from "@/components/SubmitLoader";
+import SubmitError from "@/components/SubmitError";
 import MotionLayer from "@/components/MotionLayer";
 import MobileCtaBar from "@/components/MobileCtaBar";
 import { GlassId } from "@/lib/glasses";
@@ -20,13 +21,14 @@ import { ScrollTrigger } from "@/lib/gsap";
 import { captureUtms, track } from "@/lib/tracking";
 import type { CreateVoucherResult } from "@/lib/types";
 
-type PageView = "landing" | "loading" | "voucher";
+type PageView = "landing" | "loading" | "voucher" | "error";
 
 export default function Page() {
   const [glass, setGlass] = useState<GlassId | null>(null);
   const [showForm, setShowForm] = useState(false);
   const [view, setView] = useState<PageView>("landing");
   const [result, setResult] = useState<CreateVoucherResult | null>(null);
+  const [submitError, setSubmitError] = useState("");
 
   const choiceRef = useRef<HTMLDivElement | null>(null);
   const formRef = useRef<HTMLDivElement | null>(null);
@@ -37,10 +39,12 @@ export default function Page() {
   }, []);
 
   useEffect(() => {
-    if (showForm) {
-      const t = setTimeout(() => ScrollTrigger.refresh(), 120);
-      return () => clearTimeout(t);
-    }
+    if (!showForm) return;
+    const t = window.setTimeout(() => {
+      scrollTo(formRef.current ?? document.getElementById("cadastro"));
+      ScrollTrigger.refresh();
+    }, 120);
+    return () => window.clearTimeout(t);
   }, [showForm]);
 
   useEffect(() => {
@@ -49,18 +53,33 @@ export default function Page() {
     }
   }, [view]);
 
+  useEffect(() => {
+    const lock = view === "loading" || view === "voucher" || view === "error";
+    if (lock) {
+      document.body.classList.add("overlay-open");
+      document.body.style.overflow = "hidden";
+      return;
+    }
+    document.body.classList.remove("overlay-open");
+    document.body.style.overflow = "";
+  }, [view]);
+
   const scrollTo = (el: HTMLElement | null) =>
     el?.scrollIntoView({ behavior: "smooth", block: "start" });
 
   const goToChoice = useCallback(() => scrollTo(choiceRef.current), []);
 
-  const confirmGlass = useCallback(() => {
-    if (!glass) return;
+  const confirmGlass = useCallback((id: GlassId) => {
+    setGlass(id);
+    if (showForm) {
+      scrollTo(formRef.current ?? document.getElementById("cadastro"));
+      return;
+    }
     setShowForm(true);
-    requestAnimationFrame(() => setTimeout(() => scrollTo(formRef.current), 60));
-  }, [glass]);
+  }, [showForm]);
 
   const handleSubmitStart = useCallback(() => {
+    setSubmitError("");
     setView("loading");
   }, []);
 
@@ -69,8 +88,15 @@ export default function Page() {
     setView("voucher");
   }, []);
 
-  const handleError = useCallback(() => {
+  const handleError = useCallback((message: string) => {
+    setSubmitError(message);
+    setView("error");
+  }, []);
+
+  const handleRetrySubmit = useCallback(() => {
+    setSubmitError("");
     setView("landing");
+    requestAnimationFrame(() => scrollTo(formRef.current));
   }, []);
 
   const handleCloseVoucher = useCallback(() => {
@@ -111,6 +137,10 @@ export default function Page() {
       <MobileCtaBar onCta={goToChoice} hidden={view !== "landing"} />
 
       {view === "loading" && <SubmitLoader />}
+
+      {view === "error" && (
+        <SubmitError message={submitError} onRetry={handleRetrySubmit} />
+      )}
 
       {view === "voucher" && result && (
         <VoucherCard result={result} onClose={handleCloseVoucher} />

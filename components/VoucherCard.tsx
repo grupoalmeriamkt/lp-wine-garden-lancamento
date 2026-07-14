@@ -1,5 +1,5 @@
 "use client";
-import { useEffect } from "react";
+import { createPortal } from "react-dom";
 import { glassById } from "@/lib/glasses";
 import { VENUE } from "@/lib/config";
 import { track } from "@/lib/tracking";
@@ -23,20 +23,13 @@ export default function VoucherCard({
   const { voucher, lead, qrDataUrl } = result;
   const g = glassById(voucher.selected_glass);
 
-  useEffect(() => {
-    document.body.classList.add("overlay-open");
-    document.body.style.overflow = "hidden";
-    return () => {
-      document.body.classList.remove("overlay-open");
-      document.body.style.overflow = "";
-    };
-  }, []);
-
   const waText = encodeURIComponent(
     `Meu convite Wine Garden — ${g?.name}\nCódigo: ${voucher.voucher_code}\nApresente na casa: ${voucher.qr_payload}`
   );
 
-  return (
+  if (typeof document === "undefined") return null;
+
+  return createPortal(
     <div className="voucher-overlay">
       <div className="voucher-scroll">
         {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -140,7 +133,8 @@ export default function VoucherCard({
           ← Voltar para a página
         </button>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }
 

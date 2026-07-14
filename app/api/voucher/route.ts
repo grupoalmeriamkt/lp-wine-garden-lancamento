@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import QRCode from "qrcode";
-import { findLeadByPhone, insertLead, insertVoucher } from "@/lib/store";
+import { findLeadByPhone, findVoucherByLeadId, insertLead, insertVoucher } from "@/lib/store";
 import {
   buildQrPayload,
   defaultExpiry,
@@ -48,9 +48,32 @@ export async function POST(req: NextRequest) {
 
   const phone = normalizePhone(rawPhone);
 
-  // --- One voucher per phone ---
+  async function buildQrDataUrl(payload: string) {
+    return QRCode.toDataURL(payload, {
+      margin: 1,
+      width: 520,
+      color: { dark: "#3f0a25", light: "#f7f9ea" },
+    });
+  }
+
+  // --- One voucher per phone (re-show existing invite when already registered) ---
   const existing = await findLeadByPhone(phone);
   if (existing) {
+    const existingVoucher = await findVoucherByLeadId(existing.id);
+    if (existingVoucher) {
+      try {
+        const qrDataUrl = await buildQrDataUrl(existingVoucher.qr_payload);
+        return NextResponse.json(
+          { voucher: existingVoucher, lead: existing, qrDataUrl, reused: true },
+          { status: 200 }
+        );
+      } catch (e) {
+        return NextResponse.json(
+          { error: "qr_failed", detail: String(e) },
+          { status: 500 }
+        );
+      }
+    }
     return NextResponse.json(
       { error: "phone_already_registered" },
       { status: 409 }
@@ -103,11 +126,13 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  const qrDataUrl = await QRCode.toDataURL(voucher.qr_payload, {
-    margin: 1,
-    width: 520,
-    color: { dark: "#3f0a25", light: "#f7f9ea" },
-  });
-
-  return NextResponse.json({ voucher, lead, qrDataUrl }, { status: 201 });
+  try {
+    const qrDataUrl = await buildQrDataUrl(voucher.qr_payload);
+    return NextResponse.json({ voucher, lead, qrDataUrl }, { status: 201 });
+  } catch (e) {
+    return NextResponse.json(
+      { error: "qr_failed", detail: String(e) },
+      { status: 500 }
+    );
+  }
 }

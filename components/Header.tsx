@@ -13,7 +13,7 @@ export default function Header() {
 
   return (
     <header className={`site-header ${solid ? "solid" : ""}`}>
-      <div className="container" style={{ display: "flex", justifyContent: "center" }}>
+      <div className="container">
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
           src={

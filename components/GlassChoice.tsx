@@ -11,7 +11,7 @@ export default function GlassChoice({
 }: {
   selected: GlassId | null;
   onSelect: (id: GlassId) => void;
-  onConfirm: () => void;
+  onConfirm: (id: GlassId) => void;
 }) {
   return (
     <section className="section" id="escolha">
@@ -85,7 +85,11 @@ export default function GlassChoice({
 
         <Reveal delay={160}>
           <div style={{ marginTop: 34 }}>
-            <button className="btn" disabled={!selected} onClick={onConfirm}>
+            <button
+              className="btn"
+              disabled={!selected}
+              onClick={() => selected && onConfirm(selected)}
+            >
               Gerar meu convite →
             </button>
           </div>
