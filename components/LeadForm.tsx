@@ -1,7 +1,6 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
 import Reveal from "./Reveal";
-import GlassLoader from "./GlassLoader";
 import { glassById, GlassId } from "@/lib/glasses";
 import { isAdult, isValidPhone } from "@/lib/voucher";
 import { captureUtms, getStoredUtms, track } from "@/lib/tracking";
@@ -21,10 +20,14 @@ function wait(ms: number) {
 
 export default function LeadForm({
   glass,
+  onSubmitStart,
   onSuccess,
+  onError,
 }: {
   glass: GlassId;
+  onSubmitStart: () => void;
   onSuccess: (r: CreateVoucherResult) => void;
+  onError: () => void;
 }) {
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
@@ -64,6 +67,7 @@ export default function LeadForm({
     setServerError("");
     if (!validate()) return;
     setLoading(true);
+    onSubmitStart();
     track("form_submitted", { glass });
 
     const utms = getStoredUtms();
@@ -94,7 +98,7 @@ export default function LeadForm({
         } else {
           setServerError("Não foi possível gerar seu convite. Tente novamente.");
         }
-        setLoading(false);
+        onError();
         return;
       }
 
@@ -103,17 +107,16 @@ export default function LeadForm({
 
       track("voucher_created", { glass, code: data.voucher?.voucher_code });
       onSuccess(data as CreateVoucherResult);
-      setLoading(false);
     } catch {
       setServerError("Erro de conexão. Tente novamente.");
+      onError();
+    } finally {
       setLoading(false);
     }
   }
 
   return (
-    <>
-      {loading && <GlassLoader />}
-      <section className="section" id="cadastro" style={{ background: "var(--offwhite)" }}>
+    <section className="section" id="cadastro" style={{ background: "var(--offwhite)" }}>
       <div className="container" style={{ maxWidth: 620 }}>
         <Reveal>
           <div className="center" style={{ marginBottom: 8 }}>
@@ -139,8 +142,7 @@ export default function LeadForm({
           <form
             onSubmit={submit}
             onChange={onFirstInteraction}
-            className="ticket"
-            style={{ padding: "34px 30px", marginTop: 20 }}
+            className="ticket form-ticket"
             noValidate
           >
             <div className="field">
@@ -212,9 +214,7 @@ export default function LeadForm({
             </div>
 
             {serverError && (
-              <p className="error" style={{ marginBottom: 16, fontSize: "0.82rem" }}>
-                {serverError}
-              </p>
+              <p className="error form-error">{serverError}</p>
             )}
 
             <button className="btn" style={{ width: "100%", justifyContent: "center" }} disabled={loading}>
@@ -228,6 +228,5 @@ export default function LeadForm({
         </Reveal>
       </div>
     </section>
-    </>
   );
 }

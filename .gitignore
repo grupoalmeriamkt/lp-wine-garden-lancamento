@@ -9,3 +9,7 @@ next-env.d.ts
 .DS_Store
 ._*
 .vercel/
+
+# Assets-fonte pesados do branding (o app usa apenas o que foi copiado p/ public/)
+/Branding Completo/
+.vercel

@@ -60,15 +60,13 @@ export default function GlassChoice({
                     src={g.taca}
                     alt=""
                     aria-hidden
-                    style={{ height: 108, margin: "10px auto 18px", display: "block" }}
+                    className="glass-card__img"
                   />
 
                   <hr className="dotted" style={{ margin: "0 0 18px" }} />
 
-                  <h3 style={{ fontSize: "2rem", color: "var(--uva)" }}>{g.name}</h3>
-                  <p className="body muted" style={{ marginTop: 6, fontSize: "0.92rem" }}>
-                    {g.tagline}
-                  </p>
+                  <h3 className="glass-card__title">{g.name}</h3>
+                  <p className="body muted glass-card__tagline">{g.tagline}</p>
 
                   <span className="glass-card__check" aria-hidden>
                     {isSel ? "✓ Selecionada" : "Selecionar"}

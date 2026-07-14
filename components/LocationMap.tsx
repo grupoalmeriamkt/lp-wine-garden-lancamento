@@ -15,6 +15,8 @@ export default function LocationMap() {
     }
 
     let cancelled = false;
+    const mobile = window.matchMedia("(max-width: 820px)").matches;
+
     loadGoogleMaps(key)
       .then((google) => {
         if (cancelled || !mapEl.current) return;
@@ -25,7 +27,7 @@ export default function LocationMap() {
           styles: WG_MAP_STYLE,
           disableDefaultUI: true,
           zoomControl: true,
-          gestureHandling: "cooperative",
+          gestureHandling: mobile ? "greedy" : "cooperative",
           backgroundColor: "#efe9d8",
         });
 

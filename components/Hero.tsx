@@ -31,16 +31,11 @@ export default function Hero({ onCta }: { onCta: () => void }) {
   );
 
   return (
-    <section
-      ref={root}
-      className="section hero-section"
-      style={{ paddingTop: 132, overflow: "hidden", position: "relative" }}
-    >
-      {/* decorative floating stamps + glass */}
+    <section ref={root} className="section hero-section">
       <Selo
         country="Franca"
         size={98}
-        className="wg-float hero-decor"
+        className="wg-float hero-decor hero-decor--hide-mobile"
         data-parallax="-32"
         style={{ position: "absolute", top: 128, left: "6%", transform: "rotate(-9deg)" }}
       />
@@ -54,7 +49,7 @@ export default function Hero({ onCta }: { onCta: () => void }) {
       <Taca
         src="/brand/elementos/taca-uva.svg"
         size={158}
-        className="wg-float hero-decor"
+        className="wg-float hero-decor hero-decor--hide-mobile"
         data-parallax="-18"
         style={{ position: "absolute", bottom: 30, left: "9%" }}
       />

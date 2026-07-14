@@ -3,15 +3,27 @@ import { useEffect, useState } from "react";
 import { track } from "@/lib/tracking";
 
 /** App-like sticky action bar shown on mobile after the hero scrolls away. */
-export default function MobileCtaBar({ onCta }: { onCta: () => void }) {
+export default function MobileCtaBar({
+  onCta,
+  hidden = false,
+}: {
+  onCta: () => void;
+  hidden?: boolean;
+}) {
   const [show, setShow] = useState(false);
 
   useEffect(() => {
+    if (hidden) {
+      setShow(false);
+      return;
+    }
     const onScroll = () => setShow(window.scrollY > window.innerHeight * 0.7);
     onScroll();
     window.addEventListener("scroll", onScroll, { passive: true });
     return () => window.removeEventListener("scroll", onScroll);
-  }, []);
+  }, [hidden]);
+
+  if (hidden) return null;
 
   return (
     <div className={`mobile-cta ${show ? "show" : ""}`} aria-hidden={!show}>

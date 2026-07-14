@@ -2,22 +2,22 @@ import { VENUE } from "@/lib/config";
 
 export default function Footer() {
   return (
-    <footer style={{ background: "var(--uva)", color: "var(--bege)", padding: "56px 0 40px" }}>
+    <footer className="site-footer">
       <div className="container">
-        <div className="footer-top">
+        <div className="footer-brand">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
             src="/brand/logo/wg-horizontal-bege-fundotransp.svg"
             alt="Wine Garden"
-            height={36}
-            style={{ height: 36 }}
+            className="footer-logo"
           />
-          <nav className="footer-links">
-            <a href={VENUE.instagram} target="_blank" rel="noopener noreferrer">Instagram</a>
-            <a href={VENUE.whatsapp} target="_blank" rel="noopener noreferrer">WhatsApp</a>
-            <a href={VENUE.mapsUrl} target="_blank" rel="noopener noreferrer">Maps</a>
-          </nav>
         </div>
+
+        <nav className="footer-links" aria-label="Redes e localização">
+          <a href={VENUE.instagram} target="_blank" rel="noopener noreferrer">Instagram</a>
+          <a href={VENUE.whatsapp} target="_blank" rel="noopener noreferrer">WhatsApp</a>
+          <a href={VENUE.mapsUrl} target="_blank" rel="noopener noreferrer">Maps</a>
+        </nav>
 
         <hr className="dotted" style={{ borderTopColor: "rgba(199,174,154,0.35)", margin: "28px 0" }} />
 

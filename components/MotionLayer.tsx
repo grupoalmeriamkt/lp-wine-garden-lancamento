@@ -19,13 +19,13 @@ export default function MotionLayer() {
   useGSAP(
     () => {
       const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+      const mobile = window.matchMedia("(max-width: 820px)").matches;
       if (reduce) return;
 
-      // ---------- Idle floating (never stops) ----------
       gsap.utils.toArray<HTMLElement>(".wg-float").forEach((el, i) => {
-        const yAmp = 14 + (i % 3) * 7; // 14–28px
-        const xAmp = 6 + (i % 4) * 4; //  6–18px
-        const rAmp = 2.5 + (i % 3) * 1.5; // 2.5–5.5deg
+        const yAmp = mobile ? 8 + (i % 3) * 4 : 14 + (i % 3) * 7;
+        const xAmp = mobile ? 4 + (i % 4) * 2 : 6 + (i % 4) * 4;
+        const rAmp = mobile ? 1.5 + (i % 3) * 0.8 : 2.5 + (i % 3) * 1.5;
 
         // vertical bob
         gsap.to(el, {
@@ -58,19 +58,21 @@ export default function MotionLayer() {
       });
 
       // ---------- Scroll parallax (drift as you scroll) ----------
-      gsap.utils.toArray<HTMLElement>("[data-parallax]").forEach((el) => {
-        const travel = parseFloat(el.dataset.parallax || "0");
-        gsap.to(el, {
-          yPercent: travel,
-          ease: "none",
-          scrollTrigger: {
-            trigger: el,
-            start: "top bottom",
-            end: "bottom top",
-            scrub: 1,
-          },
+      if (!mobile) {
+        gsap.utils.toArray<HTMLElement>("[data-parallax]").forEach((el) => {
+          const travel = parseFloat(el.dataset.parallax || "0");
+          gsap.to(el, {
+            yPercent: travel,
+            ease: "none",
+            scrollTrigger: {
+              trigger: el,
+              start: "top bottom",
+              end: "bottom top",
+              scrub: 1,
+            },
+          });
         });
-      });
+      }
     },
     { scope }
   );

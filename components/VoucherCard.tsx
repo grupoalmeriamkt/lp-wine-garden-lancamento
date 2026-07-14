@@ -24,8 +24,10 @@ export default function VoucherCard({
   const g = glassById(voucher.selected_glass);
 
   useEffect(() => {
+    document.body.classList.add("overlay-open");
     document.body.style.overflow = "hidden";
     return () => {
+      document.body.classList.remove("overlay-open");
       document.body.style.overflow = "";
     };
   }, []);
@@ -41,8 +43,7 @@ export default function VoucherCard({
         <img
           src="/brand/logo/wg-horizontal-bege-fundotransp.svg"
           alt="Wine Garden"
-          height={38}
-          style={{ height: 38, margin: "0 auto 26px", display: "block" }}
+          className="voucher-logo"
         />
 
         <p className="eyebrow center" style={{ color: "var(--bege)", marginBottom: 30 }}>
@@ -55,16 +56,13 @@ export default function VoucherCard({
               <span className="mono-label" style={{ color: "var(--uva-70)" }}>
                 Nova fase · Brasília
               </span>
-              <h2 style={{ fontSize: "2.4rem", color: "var(--uva)", marginTop: 6 }}>
-                Seu convite está pronto.
-              </h2>
+              <h2 className="voucher-title">Seu convite está pronto.</h2>
             </div>
-            {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
               src={g?.taca ?? "/brand/elementos/taca-granada.svg"}
               alt=""
               aria-hidden
-              style={{ height: 76 }}
+              className="voucher-taca"
             />
           </div>
 
@@ -153,12 +151,7 @@ function Row({ label, value, mono }: { label: string; value: string; mono?: bool
         {label}
       </span>
       <span
-        style={{
-          fontFamily: mono ? "var(--mono)" : "var(--serif)",
-          fontSize: mono ? "1.05rem" : "1.35rem",
-          color: "var(--granada)",
-          letterSpacing: mono ? "0.08em" : "0",
-        }}
+        className={`voucher-value ${mono ? "voucher-value--mono" : "voucher-value--serif"}`}
       >
         {value}
       </span>

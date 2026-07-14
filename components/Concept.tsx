@@ -3,20 +3,9 @@ import { Selo, Mapa, Taca, RouteLine } from "./Decor";
 
 export default function Concept() {
   return (
-    <section
-      className="section"
-      style={{ background: "var(--uva)", color: "var(--offwhite)", overflow: "hidden" }}
-    >
+    <section className="section concept-section">
       <div className="container" style={{ position: "relative" }}>
-        <div
-          style={{
-            display: "grid",
-            gridTemplateColumns: "1.1fr 0.9fr",
-            gap: 56,
-            alignItems: "center",
-          }}
-          className="concept-grid"
-        >
+        <div className="concept-grid">
           <div>
             <Reveal>
               <div
@@ -53,40 +42,29 @@ export default function Concept() {
           </div>
 
           <Reveal delay={160} className="concept-visual">
-            <div
-              style={{
-                position: "relative",
-                minHeight: 340,
-                display: "flex",
-                justifyContent: "center",
-                alignItems: "center",
-              }}
-            >
+            <div className="concept-stage">
               <Mapa
                 country="Franca"
                 width={230}
+                className="concept-map"
                 data-parallax="-14"
-                style={{ opacity: 0.6, filter: "brightness(0) invert(1)" }}
               />
               <Selo
                 country="Portugal"
                 size={110}
-                className="wg-float"
+                className="wg-float concept-selo--pt"
                 data-parallax="-30"
-                style={{ position: "absolute", top: 0, right: 20 }}
               />
               <Selo
                 country="Argentina"
                 size={96}
-                className="wg-float"
+                className="wg-float concept-selo--ar"
                 data-parallax="34"
-                style={{ position: "absolute", bottom: 10, left: 10 }}
               />
               <Taca
                 src="/brand/elementos/taca-purpura.svg"
                 size={150}
-                className="wg-float"
-                style={{ position: "absolute", bottom: -10, right: 40, filter: "brightness(0) invert(1)", opacity: 0.9 }}
+                className="wg-float concept-taca"
               />
             </div>
           </Reveal>

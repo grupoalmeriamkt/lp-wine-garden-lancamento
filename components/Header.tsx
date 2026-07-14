@@ -22,8 +22,7 @@ export default function Header() {
               : "/brand/logo/wg-horizontal-granada-fundotransp.svg"
           }
           alt="Wine Garden"
-          height={30}
-          style={{ height: 30, width: "auto" }}
+          className="site-header__logo"
         />
       </div>
     </header>

@@ -12,6 +12,7 @@ import Location from "@/components/Location";
 import Closing from "@/components/Closing";
 import Footer from "@/components/Footer";
 import VoucherCard from "@/components/VoucherCard";
+import SubmitLoader from "@/components/SubmitLoader";
 import MotionLayer from "@/components/MotionLayer";
 import MobileCtaBar from "@/components/MobileCtaBar";
 import { GlassId } from "@/lib/glasses";
@@ -19,9 +20,12 @@ import { ScrollTrigger } from "@/lib/gsap";
 import { captureUtms, track } from "@/lib/tracking";
 import type { CreateVoucherResult } from "@/lib/types";
 
+type PageView = "landing" | "loading" | "voucher";
+
 export default function Page() {
   const [glass, setGlass] = useState<GlassId | null>(null);
   const [showForm, setShowForm] = useState(false);
+  const [view, setView] = useState<PageView>("landing");
   const [result, setResult] = useState<CreateVoucherResult | null>(null);
 
   const choiceRef = useRef<HTMLDivElement | null>(null);
@@ -32,13 +36,18 @@ export default function Page() {
     track("lp_view");
   }, []);
 
-  // Recalculate scroll positions when the form is injected into the flow.
   useEffect(() => {
     if (showForm) {
       const t = setTimeout(() => ScrollTrigger.refresh(), 120);
       return () => clearTimeout(t);
     }
   }, [showForm]);
+
+  useEffect(() => {
+    if (view === "voucher") {
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }
+  }, [view]);
 
   const scrollTo = (el: HTMLElement | null) =>
     el?.scrollIntoView({ behavior: "smooth", block: "start" });
@@ -48,9 +57,26 @@ export default function Page() {
   const confirmGlass = useCallback(() => {
     if (!glass) return;
     setShowForm(true);
-    // wait for form to mount before scrolling
     requestAnimationFrame(() => setTimeout(() => scrollTo(formRef.current), 60));
   }, [glass]);
+
+  const handleSubmitStart = useCallback(() => {
+    setView("loading");
+  }, []);
+
+  const handleSuccess = useCallback((data: CreateVoucherResult) => {
+    setResult(data);
+    setView("voucher");
+  }, []);
+
+  const handleError = useCallback(() => {
+    setView("landing");
+  }, []);
+
+  const handleCloseVoucher = useCallback(() => {
+    setResult(null);
+    setView("landing");
+  }, []);
 
   return (
     <main>
@@ -67,7 +93,12 @@ export default function Page() {
 
       {showForm && glass && (
         <div ref={formRef}>
-          <LeadForm glass={glass} onSuccess={setResult} />
+          <LeadForm
+            glass={glass}
+            onSubmitStart={handleSubmitStart}
+            onSuccess={handleSuccess}
+            onError={handleError}
+          />
         </div>
       )}
 
@@ -77,10 +108,12 @@ export default function Page() {
       <Closing onCta={goToChoice} />
       <Footer />
 
-      <MobileCtaBar onCta={goToChoice} />
+      <MobileCtaBar onCta={goToChoice} hidden={view !== "landing"} />
 
-      {result && (
-        <VoucherCard result={result} onClose={() => setResult(null)} />
+      {view === "loading" && <SubmitLoader />}
+
+      {view === "voucher" && result && (
+        <VoucherCard result={result} onClose={handleCloseVoucher} />
       )}
     </main>
   );

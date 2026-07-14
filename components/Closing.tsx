@@ -16,7 +16,7 @@ export default function Closing({ onCta }: { onCta: () => void }) {
           </h2>
         </Reveal>
         <Reveal delay={160}>
-          <p className="display italic" style={{ color: "var(--bege)", marginBottom: 8 }}>
+          <p className="display italic closing-subtitle">
             Fique para descobrir.
           </p>
         </Reveal>

@@ -30,10 +30,8 @@ export default function HowItWorks() {
               <div className="ticket step-card">
                 <div className="step-card__n">{s.n}</div>
                 <hr className="dotted" style={{ margin: "16px 0" }} />
-                <h3 style={{ fontSize: "1.5rem", color: "var(--uva)" }}>{s.t}</h3>
-                <p className="body" style={{ fontSize: "0.86rem", marginTop: 8, color: "var(--uva-70)" }}>
-                  {s.d}
-                </p>
+                <h3 className="step-card__title">{s.t}</h3>
+                <p className="body step-card__desc">{s.d}</p>
               </div>
             </Reveal>
           ))}
