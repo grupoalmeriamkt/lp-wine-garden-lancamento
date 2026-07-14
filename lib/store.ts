@@ -231,4 +231,97 @@ export async function emailStatusByCodes(
   return out;
 }
 
+export interface LeadWithVoucher {
+  lead: Lead;
+  voucher: Voucher | null;
+}
+
+export async function listLeadsWithVouchers(): Promise<LeadWithVoucher[]> {
+  const sb = getSupabaseAdmin();
+  if (sb) {
+    const { data: leads } = await sb
+      .from("winegarden_leads")
+      .select("*")
+      .order("created_at", { ascending: false });
+    const { data: vouchers } = await sb.from("winegarden_vouchers").select("*");
+    const vByLead = new Map<string, Voucher>();
+    for (const v of (vouchers as Voucher[]) ?? []) {
+      const prev = vByLead.get(v.lead_id);
+      if (!prev || prev.created_at < v.created_at) vByLead.set(v.lead_id, v);
+    }
+    return ((leads as Lead[]) ?? []).map((lead) => ({
+      lead,
+      voucher: vByLead.get(lead.id) ?? null,
+    }));
+  }
+  const leads = await readJson<Lead>(LEADS_FILE);
+  const vouchers = await readJson<Voucher>(VOUCHERS_FILE);
+  return leads
+    .slice()
+    .sort((a, b) => (a.created_at < b.created_at ? 1 : -1))
+    .map((lead) => ({
+      lead,
+      voucher:
+        vouchers
+          .filter((v) => v.lead_id === lead.id)
+          .sort((a, b) => (a.created_at < b.created_at ? 1 : -1))[0] ?? null,
+    }));
+}
+
+export async function findLeadById(id: string): Promise<Lead | null> {
+  const sb = getSupabaseAdmin();
+  if (sb) {
+    const { data } = await sb
+      .from("winegarden_leads")
+      .select("*")
+      .eq("id", id)
+      .maybeSingle();
+    return (data as Lead) ?? null;
+  }
+  const leads = await readJson<Lead>(LEADS_FILE);
+  return leads.find((l) => l.id === id) ?? null;
+}
+
+export async function updateLead(
+  id: string,
+  patch: Partial<Lead>
+): Promise<Lead | null> {
+  const sb = getSupabaseAdmin();
+  if (sb) {
+    const { data, error } = await sb
+      .from("winegarden_leads")
+      .update(patch)
+      .eq("id", id)
+      .select()
+      .maybeSingle();
+    if (error) throw new Error(error.message);
+    return (data as Lead) ?? null;
+  }
+  const leads = await readJson<Lead>(LEADS_FILE);
+  const idx = leads.findIndex((l) => l.id === id);
+  if (idx === -1) return null;
+  leads[idx] = { ...leads[idx], ...patch, id };
+  await writeJson(LEADS_FILE, leads);
+  return leads[idx];
+}
+
+export async function deleteLead(id: string): Promise<boolean> {
+  const sb = getSupabaseAdmin();
+  if (sb) {
+    const { error } = await sb.from("winegarden_leads").delete().eq("id", id);
+    if (error) throw new Error(error.message);
+    return true;
+  }
+  const leads = await readJson<Lead>(LEADS_FILE);
+  const next = leads.filter((l) => l.id !== id);
+  await writeJson(LEADS_FILE, next);
+  // Cascata manual no fallback JSON:
+  const vouchers = await readJson<Voucher>(VOUCHERS_FILE);
+  await writeJson(
+    VOUCHERS_FILE,
+    vouchers.filter((v) => v.lead_id !== id)
+  );
+  return next.length !== leads.length;
+}
+
 export type { Lead, LeadInput, Voucher };
