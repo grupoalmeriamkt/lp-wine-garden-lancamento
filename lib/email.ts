@@ -6,7 +6,7 @@ export interface VoucherEmailData {
   code: string;
   validade: string; // texto já formatado (ex.: "13 de agosto de 2026")
   voucherUrl: string; // link para o convite online
-  qrDataUrl: string; // data:image/png;base64,...
+  qrUrl: string; // URL absoluta https do PNG do QR (data: é bloqueado no Gmail)
   logoUrl: string; // URL absoluta do PNG bege
   mapsUrl?: string;
 }
@@ -74,7 +74,7 @@ export function buildVoucherEmailHtml(d: VoucherEmailData): string {
               ${row("Validade", d.validade)}
             </td>
             <td valign="top" width="168" align="center">
-              <img src="${d.qrDataUrl}" width="150" height="150" alt="QR Code do convite ${d.code}" style="display:block;width:150px;height:150px;border:1px solid rgba(63,10,37,0.18);border-radius:8px;background:#fff;padding:6px;">
+              <img src="${d.qrUrl}" width="150" height="150" alt="QR Code do convite ${d.code}" style="display:block;width:150px;height:150px;border:1px solid rgba(63,10,37,0.18);border-radius:8px;background:#fff;padding:6px;">
               <p style="margin:8px 0 0;font-family:${MONO};font-size:10px;letter-spacing:1px;text-transform:uppercase;color:rgba(63,10,37,0.5);">Apresente na entrada</p>
             </td>
           </tr>

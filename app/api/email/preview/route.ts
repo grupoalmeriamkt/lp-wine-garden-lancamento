@@ -1,5 +1,4 @@
 import { NextRequest, NextResponse } from "next/server";
-import QRCode from "qrcode";
 import { buildVoucherEmailHtml } from "@/lib/email";
 import { VENUE, CAMPAIGN } from "@/lib/config";
 import { buildQrPayload } from "@/lib/voucher";
@@ -21,11 +20,6 @@ export async function GET(req: NextRequest) {
   // Link do convite usa a URL canônica quando definida.
   const origin = process.env.NEXT_PUBLIC_SITE_URL || req.nextUrl.origin;
   const voucherUrl = buildQrPayload(code, origin);
-  const qrDataUrl = await QRCode.toDataURL(voucherUrl, {
-    margin: 1,
-    width: 320,
-    color: { dark: "#3f0a25", light: "#f7f9ea" },
-  });
 
   const html = buildVoucherEmailHtml({
     name,
@@ -33,7 +27,7 @@ export async function GET(req: NextRequest) {
     code,
     validade: `${CAMPAIGN.courtesyPeriod.label} de 2026`,
     voucherUrl,
-    qrDataUrl,
+    qrUrl: `${assetOrigin}/api/qr/${code}`,
     logoUrl: `${assetOrigin}/brand/logo/wg-horizontal-bege.png`,
     mapsUrl: VENUE.mapsUrl,
   });

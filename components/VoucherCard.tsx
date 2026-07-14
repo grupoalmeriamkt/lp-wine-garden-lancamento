@@ -5,6 +5,7 @@ import { VENUE } from "@/lib/config";
 import { track } from "@/lib/tracking";
 import type { CreateVoucherResult } from "@/lib/types";
 import CampaignPeriodCallout from "./CampaignPeriodCallout";
+import SponsorLogos from "./SponsorLogos";
 
 function fmtDate(iso: string) {
   return new Date(iso).toLocaleDateString("pt-BR", {
@@ -99,6 +100,11 @@ export default function VoucherCard({
               <li>Válido somente para maiores de 18 anos.</li>
               <li>Rótulos sujeitos à disponibilidade. Resgate presencial.</li>
             </ul>
+          </div>
+
+          <div className="voucher-sponsors" aria-label="Patrocinadores">
+            <p className="mono-label voucher-sponsors__label">Oferecimento</p>
+            <SponsorLogos showApoioLabel />
           </div>
         </div>
 
