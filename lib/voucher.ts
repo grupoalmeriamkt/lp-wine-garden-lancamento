@@ -70,11 +70,9 @@ export function parseBrBirthdate(value: string): string | null {
   return iso;
 }
 
-/** Voucher validity window: 30 days from creation. */
-export function defaultExpiry(from: Date = new Date()): string {
-  const d = new Date(from);
-  d.setDate(d.getDate() + 30);
-  return d.toISOString();
+/** Voucher validity: end of the campaign courtesy window (07/08/2026). */
+export function defaultExpiry(): string {
+  return new Date("2026-08-07T23:59:59-03:00").toISOString();
 }
 
 export function buildQrPayload(code: string, siteUrl: string): string {

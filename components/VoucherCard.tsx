@@ -4,6 +4,7 @@ import { glassById } from "@/lib/glasses";
 import { VENUE } from "@/lib/config";
 import { track } from "@/lib/tracking";
 import type { CreateVoucherResult } from "@/lib/types";
+import CampaignPeriodCallout from "./CampaignPeriodCallout";
 
 function fmtDate(iso: string) {
   return new Date(iso).toLocaleDateString("pt-BR", {
@@ -47,7 +48,7 @@ export default function VoucherCard({
           <div className="voucher-card__head">
             <div>
               <span className="mono-label" style={{ color: "var(--uva-70)" }}>
-                Nova fase · Brasília
+                Nova fase · Pontão Lago Sul
               </span>
               <h2 className="voucher-title">Seu convite está pronto.</h2>
             </div>
@@ -63,6 +64,8 @@ export default function VoucherCard({
             Apresente este convite no Wine Garden e brinde a primeira taça da nova
             fase.
           </p>
+
+          <CampaignPeriodCallout variant="voucher" />
 
           <hr className="dotted" />
 

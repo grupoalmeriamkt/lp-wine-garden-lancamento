@@ -12,6 +12,7 @@ import {
 } from "@/lib/voucher";
 import { glassById } from "@/lib/glasses";
 import type { Lead, Voucher } from "@/lib/types";
+import { sendVoucherEmail } from "@/lib/voucherEmail";
 
 export const runtime = "nodejs";
 
@@ -128,6 +129,9 @@ export async function POST(req: NextRequest) {
 
   try {
     const qrDataUrl = await buildQrDataUrl(voucher.qr_payload);
+    if (email) {
+      void sendVoucherEmail({ to: email, lead, voucher, qrDataUrl });
+    }
     return NextResponse.json({ voucher, lead, qrDataUrl }, { status: 201 });
   } catch (e) {
     return NextResponse.json(

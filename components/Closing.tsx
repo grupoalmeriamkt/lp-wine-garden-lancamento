@@ -23,7 +23,7 @@ export default function Closing({ onCta }: { onCta: () => void }) {
         <Reveal delay={220}>
           <p className="body" style={{ color: "rgba(247,249,234,0.82)", maxWidth: 560, margin: "18px auto 0" }}>
             A nova fase do Wine Garden começa com uma taça, mas continua em cada
-            escolha: mais de 40 rótulos, novas harmonizações, novas noites e novos
+            escolha: mais de 50 rótulos, novas harmonizações, novas noites e novos
             encontros.
           </p>
         </Reveal>

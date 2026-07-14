@@ -2,6 +2,8 @@
 import { useRef } from "react";
 import Reveal from "./Reveal";
 import { Selo, Taca, RouteLine } from "./Decor";
+import CampaignPeriodCallout from "./CampaignPeriodCallout";
+import SponsorLogos from "./SponsorLogos";
 import { track } from "@/lib/tracking";
 import { gsap, useGSAP } from "@/lib/gsap";
 
@@ -71,7 +73,7 @@ export default function Hero({ onCta }: { onCta: () => void }) {
         />
 
         <Reveal delay={420}>
-          <div className="eyebrow hero-eyebrow">Brasília · Reabertura</div>
+          <div className="eyebrow hero-eyebrow">Pontão Lago Sul · Reabertura</div>
         </Reveal>
 
         <Reveal delay={500}>
@@ -97,12 +99,16 @@ export default function Hero({ onCta }: { onCta: () => void }) {
         <Reveal delay={720}>
           <p className="body hero-lead">
             Um convite especial para brindar o retorno do Wine Garden com uma nova
-            carta de mais de 40 rótulos, novos sabores e uma nova forma de viver o
-            vinho em Brasília.
+            carta de mais de 50 rótulos em taças, novos sabores e uma nova forma de
+            viver o vinho em Brasília.
           </p>
         </Reveal>
 
-        <Reveal delay={780}>
+        <Reveal delay={760}>
+          <CampaignPeriodCallout />
+        </Reveal>
+
+        <Reveal delay={800}>
           <div className="hero-cta">
             <button
               className="btn"
@@ -113,9 +119,10 @@ export default function Hero({ onCta }: { onCta: () => void }) {
             >
               Escolher minha taça →
             </button>
-            <p className="tiny muted hero-sponsors">
-              Oferecimento Cartões Caixa, Visa e Elo.
-            </p>
+            <div className="hero-sponsors">
+              <p className="tiny muted hero-sponsors__label">Oferecimento Caixa, apoio Visa e Elo</p>
+              <SponsorLogos compact />
+            </div>
           </div>
         </Reveal>
       </div>

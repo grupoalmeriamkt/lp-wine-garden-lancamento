@@ -1,4 +1,14 @@
 // Ajuste estes valores com os dados reais da casa antes do go-live.
+export const CAMPAIGN = {
+  rotulosCount: 50,
+  courtesyPeriod: {
+    start: "2026-07-31",
+    end: "2026-08-07",
+    label: "31 de julho a 07 de agosto",
+    shortLabel: "31 jul – 07 ago",
+  },
+} as const;
+
 export const VENUE = {
   name: "Wine Garden",
   address: "Wine Garden — Brasília, DF",
@@ -18,8 +28,8 @@ export const VENUE = {
   reservationUrl: "https://wa.me/5561999999999?text=Quero%20reservar%20uma%20mesa%20no%20Wine%20Garden",
 };
 
-export const SPONSORS = [
-  { name: "Cartões Caixa", logo: "/brand/sponsors/caixa.svg", height: 28 },
-  { name: "Visa", logo: "/brand/sponsors/visa.svg", height: 26 },
-  { name: "Elo", logo: "/brand/sponsors/elo.svg", height: 30 },
-] as const;
+export const SPONSORS = {
+  caixa: { name: "Cartões Caixa", logo: "/brand/sponsors/caixa.svg", height: 32 },
+  visa: { name: "Visa", logo: "/brand/sponsors/visa.svg", height: 26 },
+  elo: { name: "Elo", logo: "/brand/sponsors/elo.svg", height: 30 },
+} as const;

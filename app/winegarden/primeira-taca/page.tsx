@@ -7,7 +7,6 @@ import GlassChoice from "@/components/GlassChoice";
 import HowItWorks from "@/components/HowItWorks";
 import LeadForm from "@/components/LeadForm";
 import Sponsors from "@/components/Sponsors";
-import Rules from "@/components/Rules";
 import Location from "@/components/Location";
 import Closing from "@/components/Closing";
 import Footer from "@/components/Footer";
@@ -129,7 +128,6 @@ export default function Page() {
       )}
 
       <Sponsors />
-      <Rules />
       <Location />
       <Closing onCta={goToChoice} />
       <Footer />

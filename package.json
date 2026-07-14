@@ -15,7 +15,8 @@
     "next": "^15.5.4",
     "qrcode": "^1.5.4",
     "react": "^19.0.0",
-    "react-dom": "^19.0.0"
+    "react-dom": "^19.0.0",
+    "resend": "^6.17.2"
   },
   "devDependencies": {
     "@types/google.maps": "^3.65.2",

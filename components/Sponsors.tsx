@@ -1,6 +1,6 @@
 import Reveal from "./Reveal";
 import { RouteLine, Taca } from "./Decor";
-import { SPONSORS } from "@/lib/config";
+import SponsorLogos from "./SponsorLogos";
 
 export default function Sponsors() {
   return (
@@ -29,9 +29,9 @@ export default function Sponsors() {
             </div>
 
             <p className="body sponsors-copy">
-              A primeira taça da nova fase é um convite especial oferecido por Cartões
-              Caixa, Visa e Elo. Clientes Caixa com cartões Visa ou Elo também contam
-              com benefícios exclusivos no Wine Garden.
+              A primeira taça da nova fase é um convite especial oferecido pela Caixa,
+              com apoio da Visa e da Elo. Clientes Caixa com cartões Visa ou Elo também
+              contam com benefícios exclusivos no Wine Garden.
             </p>
           </div>
         </Reveal>
@@ -39,24 +39,7 @@ export default function Sponsors() {
         <Reveal delay={120}>
           <div className="sponsors-ticket stamp-border" aria-label="Patrocinadores">
             <p className="mono-label sponsors-ticket__label">Oferecimento</p>
-
-            <div className="sponsors-brands">
-              {SPONSORS.map((sponsor, index) => (
-                <div key={sponsor.name} className="sponsor-brand">
-                  <img
-                    src={sponsor.logo}
-                    alt={sponsor.name}
-                    height={sponsor.height}
-                    style={{ height: sponsor.height }}
-                    className="sponsor-brand__logo"
-                    loading="lazy"
-                  />
-                  {index < SPONSORS.length - 1 && (
-                    <hr className="dotted sponsor-brand__sep" aria-hidden />
-                  )}
-                </div>
-              ))}
-            </div>
+            <SponsorLogos showApoioLabel />
           </div>
         </Reveal>
       </div>

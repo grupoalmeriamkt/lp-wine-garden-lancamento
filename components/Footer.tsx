@@ -29,7 +29,7 @@ export default function Footer() {
             Campanha “A primeira taça da nova fase”. Convite individual e
             intransferível, válido para maiores de 18 anos, por tempo limitado e
             sujeito à disponibilidade de rótulos. Não cumulativo com outras
-            cortesias. Um oferecimento Cartões Caixa, Visa e Elo. Beba com
+            cortesias. Oferecimento Caixa, apoio Visa e Elo. Beba com
             moderação.
           </p>
           <p className="tiny" style={{ color: "rgba(199,174,154,0.5)" }}>

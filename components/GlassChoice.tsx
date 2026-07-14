@@ -28,7 +28,7 @@ export default function GlassChoice({
         </Reveal>
         <Reveal delay={140}>
           <p className="body muted" style={{ maxWidth: 540, margin: "20px auto 0" }}>
-            Mais de 40 rótulos na carta. Selecione uma das opções disponíveis e gere
+            Mais de 50 rótulos em taças. Selecione uma das opções disponíveis e gere
             seu convite individual para brindar o retorno do Wine Garden.
           </p>
         </Reveal>

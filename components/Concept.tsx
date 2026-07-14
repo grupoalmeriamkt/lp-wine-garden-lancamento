@@ -35,9 +35,21 @@ export default function Concept() {
               >
                 Depois de sete anos de encontros, brindes e memórias, o Wine Garden
                 volta ao seu nome original com um novo conceito: vinhos em taça,
-                mais de 40 rótulos na carta, gastronomia, música e uma atmosfera
+                mais de 50 rótulos em taças, gastronomia, música e uma atmosfera
                 pensada para redescobrir o prazer de estar junto.
               </p>
+            </Reveal>
+            <Reveal delay={260}>
+              <div className="concept-highlights">
+                <div className="concept-highlight">
+                  <span className="concept-highlight__label">Destaque</span>
+                  <p className="concept-highlight__title">Curadoria musical especial</p>
+                </div>
+                <div className="concept-highlight">
+                  <span className="concept-highlight__label">Destaque</span>
+                  <p className="concept-highlight__title">Menu novo e reformulado</p>
+                </div>
+              </div>
             </Reveal>
           </div>
 
