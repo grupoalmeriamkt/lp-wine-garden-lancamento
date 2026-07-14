@@ -308,9 +308,13 @@ export async function updateLead(
 export async function deleteLead(id: string): Promise<boolean> {
   const sb = getSupabaseAdmin();
   if (sb) {
-    const { error } = await sb.from("winegarden_leads").delete().eq("id", id);
+    const { data, error } = await sb
+      .from("winegarden_leads")
+      .delete()
+      .eq("id", id)
+      .select("id");
     if (error) throw new Error(error.message);
-    return true;
+    return (data?.length ?? 0) > 0;
   }
   const leads = await readJson<Lead>(LEADS_FILE);
   const next = leads.filter((l) => l.id !== id);

@@ -62,8 +62,12 @@ export async function POST(req: NextRequest) {
     status: "active", expires_at: defaultExpiry(), created_at: nowIso,
     redeemed_at: null, redeemed_by: null,
   };
-  await insertLead(lead);
-  await insertVoucher(voucher);
+  try {
+    await insertLead(lead);
+    await insertVoucher(voucher);
+  } catch (e) {
+    return NextResponse.json({ error: "persist_failed", detail: String(e) }, { status: 500 });
+  }
 
   const base = siteUrl.replace(/\/$/, "");
   const r = await sendVoucherEmail(email, {
