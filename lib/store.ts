@@ -9,12 +9,23 @@ import { promises as fs } from "fs";
 import path from "path";
 import { getSupabaseAdmin } from "./supabase";
 import type { Lead, LeadInput, Voucher } from "./types";
+import type { EmailEvent, EmailEventType, EmailStatus } from "./types";
 
 /* ----------------------------- Local driver ----------------------------- */
 
 const DATA_DIR = path.join(process.cwd(), ".data");
 const LEADS_FILE = path.join(DATA_DIR, "winegarden_leads.json");
 const VOUCHERS_FILE = path.join(DATA_DIR, "winegarden_vouchers.json");
+const EMAIL_EVENTS_FILE = path.join(DATA_DIR, "winegarden_email_events.json");
+
+const STAGE_ORDER: Record<EmailEventType, number> = {
+  sent: 1,
+  resent: 1,
+  delivered: 2,
+  opened: 3,
+  bounced: 2,
+  complained: 2,
+};
 
 async function readJson<T>(file: string): Promise<T[]> {
   try {
@@ -149,6 +160,52 @@ export async function updateVoucher(
   vouchers[idx] = { ...vouchers[idx], ...patch };
   await writeJson(VOUCHERS_FILE, vouchers);
   return vouchers[idx];
+}
+
+export async function insertEmailEvent(evt: EmailEvent): Promise<void> {
+  const sb = getSupabaseAdmin();
+  if (sb) {
+    const { error } = await sb.from("winegarden_email_events").insert(evt);
+    if (error) throw new Error(error.message);
+    return;
+  }
+  const rows = await readJson<EmailEvent>(EMAIL_EVENTS_FILE);
+  rows.push(evt);
+  await writeJson(EMAIL_EVENTS_FILE, rows);
+}
+
+export async function emailStatusByCodes(
+  codes: string[]
+): Promise<Record<string, EmailStatus>> {
+  const out: Record<string, EmailStatus> = {};
+  if (codes.length === 0) return out;
+
+  let rows: EmailEvent[] = [];
+  const sb = getSupabaseAdmin();
+  if (sb) {
+    const { data } = await sb
+      .from("winegarden_email_events")
+      .select("*")
+      .in("voucher_code", codes);
+    rows = (data as EmailEvent[]) ?? [];
+  } else {
+    const all = await readJson<EmailEvent>(EMAIL_EVENTS_FILE);
+    rows = all.filter((r) => r.voucher_code && codes.includes(r.voucher_code));
+  }
+
+  for (const code of codes) out[code] = { stage: "none" };
+  for (const r of rows) {
+    const code = r.voucher_code!;
+    const st = out[code] ?? { stage: "none" };
+    if (r.type === "sent" || r.type === "resent") st.sentAt = r.created_at;
+    if (r.type === "delivered") st.deliveredAt = r.created_at;
+    if (r.type === "opened") st.openedAt = r.created_at;
+    if (r.type === "bounced") st.bouncedAt = r.created_at;
+    const cur = st.stage === "none" ? 0 : STAGE_ORDER[st.stage];
+    if (STAGE_ORDER[r.type] >= cur) st.stage = r.type;
+    out[code] = st;
+  }
+  return out;
 }
 
 export type { Lead, LeadInput, Voucher };

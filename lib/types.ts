@@ -39,3 +39,29 @@ export interface CreateVoucherResult {
   lead: Lead;
   qrDataUrl: string;
 }
+
+export type EmailEventType =
+  | "sent"
+  | "resent"
+  | "delivered"
+  | "opened"
+  | "bounced"
+  | "complained";
+
+export interface EmailEvent {
+  id: string;
+  resend_id?: string | null;
+  email: string;
+  voucher_code?: string | null;
+  type: EmailEventType;
+  created_at: string;
+  raw?: unknown;
+}
+
+export interface EmailStatus {
+  stage: EmailEventType | "none";
+  sentAt?: string;
+  deliveredAt?: string;
+  openedAt?: string;
+  bouncedAt?: string;
+}
