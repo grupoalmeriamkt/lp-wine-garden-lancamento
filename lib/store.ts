@@ -179,6 +179,7 @@ export async function emailStatusByCodes(
 ): Promise<Record<string, EmailStatus>> {
   const out: Record<string, EmailStatus> = {};
   if (codes.length === 0) return out;
+  for (const code of codes) out[code] = { stage: "none" };
 
   let rows: EmailEvent[] = [];
   const sb = getSupabaseAdmin();
@@ -193,17 +194,39 @@ export async function emailStatusByCodes(
     rows = all.filter((r) => r.voucher_code && codes.includes(r.voucher_code));
   }
 
-  for (const code of codes) out[code] = { stage: "none" };
+  // Mapa resend_id -> code (a partir dos eventos 'sent'/'resent' já carregados).
+  const idToCode = new Map<string, string>();
   for (const r of rows) {
+    if (r.resend_id && r.voucher_code) idToCode.set(r.resend_id, r.voucher_code);
+  }
+
+  // Eventos com voucher_code nulo mas resend_id conhecido.
+  let orphans: EmailEvent[] = [];
+  if (sb && idToCode.size > 0) {
+    const { data } = await sb
+      .from("winegarden_email_events")
+      .select("*")
+      .is("voucher_code", null)
+      .in("resend_id", Array.from(idToCode.keys()));
+    orphans = (data as EmailEvent[]) ?? [];
+  } else if (!sb) {
+    const all = await readJson<EmailEvent>(EMAIL_EVENTS_FILE);
+    orphans = all.filter(
+      (r) => !r.voucher_code && r.resend_id && idToCode.has(r.resend_id)
+    );
+  }
+  for (const o of orphans) o.voucher_code = idToCode.get(o.resend_id!)!;
+
+  for (const r of [...rows, ...orphans]) {
     const code = r.voucher_code!;
-    const st = out[code] ?? { stage: "none" };
+    if (!out[code]) continue;
+    const st = out[code];
     if (r.type === "sent" || r.type === "resent") st.sentAt = r.created_at;
     if (r.type === "delivered") st.deliveredAt = r.created_at;
     if (r.type === "opened") st.openedAt = r.created_at;
     if (r.type === "bounced") st.bouncedAt = r.created_at;
     const cur = st.stage === "none" ? 0 : STAGE_ORDER[st.stage];
     if (STAGE_ORDER[r.type] >= cur) st.stage = r.type;
-    out[code] = st;
   }
   return out;
 }
