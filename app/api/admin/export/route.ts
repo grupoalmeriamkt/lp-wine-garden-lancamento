@@ -5,7 +5,8 @@ import { glassLabel } from "@/lib/glasses";
 export const runtime = "nodejs";
 
 function csvCell(v: unknown): string {
-  const s = v == null ? "" : String(v);
+  let s = v == null ? "" : String(v);
+  if (/^[=+\-@]/.test(s)) s = "'" + s;
   return /[",\n;]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
 }
 

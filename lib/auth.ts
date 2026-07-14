@@ -7,7 +7,14 @@ export const COOKIE = { admin: "wg_admin", operator: "wg_operator" } as const;
 const enc = new TextEncoder();
 
 function secret(): string {
-  return process.env.AUTH_SECRET || "dev-insecure-secret-change-me";
+  const s = process.env.AUTH_SECRET;
+  if (!s) {
+    if (process.env.NODE_ENV === "production") {
+      throw new Error("AUTH_SECRET não definido — configure-o antes de habilitar /admin e /operador em produção.");
+    }
+    return "dev-insecure-secret-change-me";
+  }
+  return s;
 }
 
 async function hmacHex(message: string): Promise<string> {

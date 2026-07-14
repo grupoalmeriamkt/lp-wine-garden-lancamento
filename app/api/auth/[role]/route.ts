@@ -7,6 +7,13 @@ function parseRole(v: string): Role | null {
   return v === "admin" || v === "operator" ? v : null;
 }
 
+function safeEqual(a: string, b: string): boolean {
+  if (a.length !== b.length) return false;
+  let diff = 0;
+  for (let i = 0; i < a.length; i++) diff |= a.charCodeAt(i) ^ b.charCodeAt(i);
+  return diff === 0;
+}
+
 export async function POST(
   req: NextRequest,
   { params }: { params: Promise<{ role: string }> }
@@ -19,7 +26,7 @@ export async function POST(
     return NextResponse.json({ error: "not_configured" }, { status: 500 });
   }
   const body = await req.json().catch(() => ({}));
-  if (String(body.password ?? "") !== expected) {
+  if (!safeEqual(String(body.password ?? ""), expected)) {
     return NextResponse.json({ error: "invalid_password" }, { status: 401 });
   }
 

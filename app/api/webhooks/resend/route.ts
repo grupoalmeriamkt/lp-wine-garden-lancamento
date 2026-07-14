@@ -79,7 +79,7 @@ export async function POST(req: NextRequest) {
     type,
     created_at: evt.created_at ?? new Date().toISOString(),
     raw: evt,
-  });
+  }).catch((e) => console.error("[webhooks/resend] insertEmailEvent falhou", e));
 
   return NextResponse.json({ ok: true });
 }

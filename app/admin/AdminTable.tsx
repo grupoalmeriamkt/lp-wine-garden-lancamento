@@ -72,7 +72,7 @@ export default function AdminTable({ rows }: { rows: AdminRow[] }) {
         <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 14 }}>
           <thead>
             <tr style={{ textAlign: "left", borderBottom: "1px solid var(--uva-70)" }}>
-              {["QR", "Nome", "Telefone", "E-mail", "CPF", "Taça", "Código", "Voucher", "E-mail", "Criado", "Ações"].map((h) => (
+              {["QR", "Nome", "Telefone", "E-mail", "CPF", "Taça", "Código", "Voucher", "Status e-mail", "Criado", "Ações"].map((h) => (
                 <th key={h} style={{ padding: "8px 6px", whiteSpace: "nowrap" }}>{h}</th>
               ))}
             </tr>

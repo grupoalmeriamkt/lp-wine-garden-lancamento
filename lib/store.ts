@@ -23,8 +23,8 @@ const STAGE_ORDER: Record<EmailEventType, number> = {
   resent: 1,
   delivered: 2,
   opened: 3,
-  bounced: 2,
-  complained: 2,
+  bounced: 4,
+  complained: 4,
 };
 
 async function readJson<T>(file: string): Promise<T[]> {
@@ -217,7 +217,10 @@ export async function emailStatusByCodes(
   }
   for (const o of orphans) o.voucher_code = idToCode.get(o.resend_id!)!;
 
-  for (const r of [...rows, ...orphans]) {
+  const combined = [...rows, ...orphans].sort((a, b) =>
+    a.created_at < b.created_at ? -1 : a.created_at > b.created_at ? 1 : 0
+  );
+  for (const r of combined) {
     const code = r.voucher_code!;
     if (!out[code]) continue;
     const st = out[code];
