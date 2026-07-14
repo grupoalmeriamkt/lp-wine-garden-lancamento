@@ -302,10 +302,16 @@ h1, h2, h3 { font-family: var(--serif); font-weight: 400; margin: 0; line-height
 .sponsor-logos__logo {
   display: block;
   width: auto;
-  max-width: min(220px, 78%);
+  height: auto;
+  max-width: none;
   object-fit: contain;
 }
-.sponsor-logos__logo--caixa { max-width: min(240px, 82%); }
+.sponsor-logos__logo--caixa { height: 30px; }
+.sponsor-logos__logo--visa { height: 22px; }
+.sponsor-logos__logo--elo { height: 28px; }
+.sponsor-logos--compact .sponsor-logos__logo--caixa { height: 24px; }
+.sponsor-logos--compact .sponsor-logos__logo--visa { height: 18px; }
+.sponsor-logos--compact .sponsor-logos__logo--elo { height: 22px; }
 .sponsor-logos__support {
   color: var(--purpura);
   margin: 0;

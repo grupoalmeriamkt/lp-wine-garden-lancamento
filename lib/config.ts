@@ -29,7 +29,7 @@ export const VENUE = {
 };
 
 export const SPONSORS = {
-  caixa: { name: "Cartões Caixa", logo: "/brand/sponsors/caixa.svg", height: 32 },
-  visa: { name: "Visa", logo: "/brand/sponsors/visa.svg", height: 26 },
-  elo: { name: "Elo", logo: "/brand/sponsors/elo.svg", height: 30 },
+  caixa: { name: "Cartões Caixa", logo: "/brand/sponsors/caixa.svg", height: 30 },
+  visa: { name: "Visa", logo: "/brand/sponsors/visa.svg", height: 22 },
+  elo: { name: "Elo", logo: "/brand/sponsors/elo.svg", height: 28 },
 } as const;
