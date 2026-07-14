@@ -44,6 +44,32 @@ export function isAdult(birth: string): boolean {
   return ageFromBirthdate(birth) >= 18;
 }
 
+/** Formats typed digits into DD/MM/YYYY while the user types. */
+export function formatBrBirthInput(raw: string): string {
+  const digits = raw.replace(/\D/g, "").slice(0, 8);
+  if (digits.length <= 2) return digits;
+  if (digits.length <= 4) return `${digits.slice(0, 2)}/${digits.slice(2)}`;
+  return `${digits.slice(0, 2)}/${digits.slice(2, 4)}/${digits.slice(4)}`;
+}
+
+/** Parses DD/MM/YYYY into YYYY-MM-DD, or null when invalid. */
+export function parseBrBirthdate(value: string): string | null {
+  const m = value.match(/^(\d{2})\/(\d{2})\/(\d{4})$/);
+  if (!m) return null;
+  const [, dd, mm, yyyy] = m;
+  const iso = `${yyyy}-${mm}-${dd}`;
+  const d = new Date(`${iso}T00:00:00`);
+  if (Number.isNaN(d.getTime())) return null;
+  if (
+    d.getFullYear() !== Number(yyyy) ||
+    d.getMonth() + 1 !== Number(mm) ||
+    d.getDate() !== Number(dd)
+  ) {
+    return null;
+  }
+  return iso;
+}
+
 /** Voucher validity window: 30 days from creation. */
 export function defaultExpiry(from: Date = new Date()): string {
   const d = new Date(from);

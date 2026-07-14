@@ -2,7 +2,12 @@
 import { useEffect, useRef, useState } from "react";
 import Reveal from "./Reveal";
 import { glassById, GlassId } from "@/lib/glasses";
-import { isAdult, isValidPhone } from "@/lib/voucher";
+import {
+  formatBrBirthInput,
+  isAdult,
+  isValidPhone,
+  parseBrBirthdate,
+} from "@/lib/voucher";
 import { captureUtms, getStoredUtms, track } from "@/lib/tracking";
 import type { CreateVoucherResult } from "@/lib/types";
 
@@ -32,6 +37,8 @@ export default function LeadForm({
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
   const [birth, setBirth] = useState("");
+  const [birthDisplay, setBirthDisplay] = useState("");
+  const [isMobile, setIsMobile] = useState(false);
   const [email, setEmail] = useState("");
   const [visit, setVisit] = useState("");
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -41,6 +48,14 @@ export default function LeadForm({
 
   useEffect(() => {
     captureUtms();
+  }, []);
+
+  useEffect(() => {
+    const mq = window.matchMedia("(max-width: 820px)");
+    const update = () => setIsMobile(mq.matches);
+    update();
+    mq.addEventListener("change", update);
+    return () => mq.removeEventListener("change", update);
   }, []);
 
   const g = glassById(glass);
@@ -56,8 +71,12 @@ export default function LeadForm({
     const e: Record<string, string> = {};
     if (name.trim().length < 2) e.name = "Informe seu nome completo.";
     if (!isValidPhone(phone)) e.phone = "Informe um telefone válido com DDD.";
-    if (!birth) e.birth = "Informe sua data de nascimento.";
-    else if (!isAdult(birth)) e.birth = "É necessário ter 18 anos ou mais.";
+    if (!birth) {
+      e.birth =
+        isMobile && birthDisplay.replace(/\D/g, "").length > 0
+          ? "Informe uma data válida (DD/MM/AAAA)."
+          : "Informe sua data de nascimento.";
+    } else if (!isAdult(birth)) e.birth = "É necessário ter 18 anos ou mais.";
     setErrors(e);
     return Object.keys(e).length === 0;
   }
@@ -171,13 +190,33 @@ export default function LeadForm({
 
             <div className="field">
               <label htmlFor="birth">Data de nascimento</label>
-              <input
-                id="birth"
-                type="date"
-                value={birth}
-                onChange={(e) => setBirth(e.target.value)}
-              />
-              <span className="hint">Convite válido apenas para maiores de 18 anos.</span>
+              {isMobile ? (
+                <input
+                  id="birth"
+                  type="text"
+                  inputMode="numeric"
+                  autoComplete="bday"
+                  placeholder="DD/MM/AAAA"
+                  value={birthDisplay}
+                  onChange={(e) => {
+                    const formatted = formatBrBirthInput(e.target.value);
+                    setBirthDisplay(formatted);
+                    setBirth(parseBrBirthdate(formatted) ?? "");
+                  }}
+                />
+              ) : (
+                <input
+                  id="birth"
+                  type="date"
+                  value={birth}
+                  onChange={(e) => setBirth(e.target.value)}
+                />
+              )}
+              <span className="hint">
+                {isMobile
+                  ? "Digite no formato DD/MM/AAAA. Convite válido apenas para maiores de 18 anos."
+                  : "Convite válido apenas para maiores de 18 anos."}
+              </span>
               {errors.birth && <span className="error">{errors.birth}</span>}
             </div>
 
