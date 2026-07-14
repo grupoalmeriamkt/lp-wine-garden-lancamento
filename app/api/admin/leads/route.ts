@@ -77,10 +77,12 @@ export async function POST(req: NextRequest) {
     logoUrl: `${base}/brand/logo/wg-horizontal-bege.png`, mapsUrl: VENUE.mapsUrl,
   }).catch(() => null);
   if (r && "id" in r && r.id) {
+    // Bookkeeping do evento de e-mail é best-effort: não deve derrubar a
+    // criação do inscrito se a tabela de eventos ainda não existir.
     await insertEmailEvent({
       id: newId(), resend_id: r.id, email, voucher_code: code,
       type: "sent", created_at: new Date().toISOString(), raw: null,
-    });
+    }).catch((e) => console.error("[admin/leads] insertEmailEvent falhou", e));
   }
   return NextResponse.json({ lead, voucher }, { status: 201 });
 }

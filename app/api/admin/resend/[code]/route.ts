@@ -41,6 +41,8 @@ export async function POST(
   if ("skipped" in r && r.skipped) {
     return NextResponse.json({ error: "email_not_configured" }, { status: 500 });
   }
+  // Bookkeeping best-effort: o e-mail já foi reenviado; não falhar a
+  // resposta se a gravação do evento der erro (ex.: tabela ausente).
   await insertEmailEvent({
     id: newId(),
     resend_id: "id" in r ? r.id ?? null : null,
@@ -49,6 +51,6 @@ export async function POST(
     type: "resent",
     created_at: new Date().toISOString(),
     raw: null,
-  });
+  }).catch((e) => console.error("[admin/resend] insertEmailEvent falhou", e));
   return NextResponse.json({ ok: true });
 }
