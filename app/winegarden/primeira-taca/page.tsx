@@ -14,6 +14,7 @@ import VoucherCard from "@/components/VoucherCard";
 import SubmitLoader from "@/components/SubmitLoader";
 import SubmitError from "@/components/SubmitError";
 import MotionLayer from "@/components/MotionLayer";
+import SmoothScroll from "@/components/SmoothScroll";
 import MobileCtaBar from "@/components/MobileCtaBar";
 import { GlassId } from "@/lib/glasses";
 import { ScrollTrigger } from "@/lib/gsap";
@@ -105,6 +106,7 @@ export default function Page() {
 
   return (
     <main>
+      <SmoothScroll />
       <MotionLayer />
       <Header />
       <Hero onCta={goToChoice} />

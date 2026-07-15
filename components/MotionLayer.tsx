@@ -22,45 +22,38 @@ export default function MotionLayer() {
       const mobile = window.matchMedia("(max-width: 820px)").matches;
       if (reduce) return;
 
+      // Idle float estilo SommaDay: bob vertical + leve rotação (translateY + rotate),
+      // ease-in-out ~4s. Sem sway horizontal — movimento limpo (intensidade +1 degrau).
       gsap.utils.toArray<HTMLElement>(".wg-float").forEach((el, i) => {
-        const yAmp = mobile ? 8 + (i % 3) * 4 : 14 + (i % 3) * 7;
-        const xAmp = mobile ? 4 + (i % 4) * 2 : 6 + (i % 4) * 4;
-        const rAmp = mobile ? 1.5 + (i % 3) * 0.8 : 2.5 + (i % 3) * 1.5;
+        const yAmp = mobile ? 10 + (i % 3) * 4 : 16 + (i % 3) * 5; // ~16–26px
+        const rAmp = mobile ? 2.5 : 4 + (i % 2); // ±4–5deg
 
         // vertical bob
         gsap.to(el, {
           y: `+=${yAmp}`,
-          duration: 3.2 + (i % 5) * 0.5,
+          duration: 4 + (i % 4) * 0.4,
           ease: "sine.inOut",
           yoyo: true,
           repeat: -1,
           delay: (i % 6) * 0.3,
         });
-        // horizontal sway (different tempo → organic drift)
-        gsap.to(el, {
-          x: `+=${i % 2 === 0 ? xAmp : -xAmp}`,
-          duration: 4.5 + (i % 4) * 0.7,
-          ease: "sine.inOut",
-          yoyo: true,
-          repeat: -1,
-          delay: (i % 5) * 0.4,
-        });
-        // gentle rock
+        // gentle rock (leve rotação, como o SommaDay)
         gsap.to(el, {
           rotation: `+=${i % 2 === 0 ? rAmp : -rAmp}`,
           transformOrigin: "50% 50%",
-          duration: 5 + (i % 3) * 0.8,
+          duration: 4.5 + (i % 3) * 0.6,
           ease: "sine.inOut",
           yoyo: true,
           repeat: -1,
-          delay: (i % 4) * 0.5,
+          delay: (i % 4) * 0.4,
         });
       });
 
       // ---------- Scroll parallax (drift as you scroll) ----------
       if (!mobile) {
+        const PARALLAX_GAIN = 1.3; // +30% de deslocamento
         gsap.utils.toArray<HTMLElement>("[data-parallax]").forEach((el) => {
-          const travel = parseFloat(el.dataset.parallax || "0");
+          const travel = parseFloat(el.dataset.parallax || "0") * PARALLAX_GAIN;
           gsap.to(el, {
             yPercent: travel,
             ease: "none",
