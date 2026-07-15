@@ -25,7 +25,7 @@ export const VENUE = {
   mapsUrl: "https://maps.app.goo.gl/r8zjuKdnhuXKfubD8",
   whatsapp: "https://wa.me/5561999999999",
   instagram: "https://instagram.com/winegardenbsb",
-  reservationUrl: "https://wa.me/5561999999999?text=Quero%20reservar%20uma%20mesa%20no%20Wine%20Garden",
+  reservationUrl: "https://www.getin.app/brasilia/izzi-wine-garden",
 };
 
 export const SPONSORS = {
