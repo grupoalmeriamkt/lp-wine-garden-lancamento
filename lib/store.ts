@@ -9,12 +9,23 @@ import { promises as fs } from "fs";
 import path from "path";
 import { getSupabaseAdmin } from "./supabase";
 import type { Lead, LeadInput, Voucher } from "./types";
+import type { EmailEvent, EmailEventType, EmailStatus } from "./types";
 
 /* ----------------------------- Local driver ----------------------------- */
 
 const DATA_DIR = path.join(process.cwd(), ".data");
 const LEADS_FILE = path.join(DATA_DIR, "winegarden_leads.json");
 const VOUCHERS_FILE = path.join(DATA_DIR, "winegarden_vouchers.json");
+const EMAIL_EVENTS_FILE = path.join(DATA_DIR, "winegarden_email_events.json");
+
+const STAGE_ORDER: Record<EmailEventType, number> = {
+  sent: 1,
+  resent: 1,
+  delivered: 2,
+  opened: 3,
+  bounced: 4,
+  complained: 4,
+};
 
 async function readJson<T>(file: string): Promise<T[]> {
   try {
@@ -149,6 +160,175 @@ export async function updateVoucher(
   vouchers[idx] = { ...vouchers[idx], ...patch };
   await writeJson(VOUCHERS_FILE, vouchers);
   return vouchers[idx];
+}
+
+export async function insertEmailEvent(evt: EmailEvent): Promise<void> {
+  const sb = getSupabaseAdmin();
+  if (sb) {
+    const { error } = await sb.from("winegarden_email_events").insert(evt);
+    if (error) throw new Error(error.message);
+    return;
+  }
+  const rows = await readJson<EmailEvent>(EMAIL_EVENTS_FILE);
+  rows.push(evt);
+  await writeJson(EMAIL_EVENTS_FILE, rows);
+}
+
+export async function emailStatusByCodes(
+  codes: string[]
+): Promise<Record<string, EmailStatus>> {
+  const out: Record<string, EmailStatus> = {};
+  if (codes.length === 0) return out;
+  for (const code of codes) out[code] = { stage: "none" };
+
+  let rows: EmailEvent[] = [];
+  const sb = getSupabaseAdmin();
+  if (sb) {
+    const { data } = await sb
+      .from("winegarden_email_events")
+      .select("*")
+      .in("voucher_code", codes);
+    rows = (data as EmailEvent[]) ?? [];
+  } else {
+    const all = await readJson<EmailEvent>(EMAIL_EVENTS_FILE);
+    rows = all.filter((r) => r.voucher_code && codes.includes(r.voucher_code));
+  }
+
+  // Mapa resend_id -> code (a partir dos eventos 'sent'/'resent' já carregados).
+  const idToCode = new Map<string, string>();
+  for (const r of rows) {
+    if (r.resend_id && r.voucher_code) idToCode.set(r.resend_id, r.voucher_code);
+  }
+
+  // Eventos com voucher_code nulo mas resend_id conhecido.
+  let orphans: EmailEvent[] = [];
+  if (sb && idToCode.size > 0) {
+    const { data } = await sb
+      .from("winegarden_email_events")
+      .select("*")
+      .is("voucher_code", null)
+      .in("resend_id", Array.from(idToCode.keys()));
+    orphans = (data as EmailEvent[]) ?? [];
+  } else if (!sb) {
+    const all = await readJson<EmailEvent>(EMAIL_EVENTS_FILE);
+    orphans = all.filter(
+      (r) => !r.voucher_code && r.resend_id && idToCode.has(r.resend_id)
+    );
+  }
+  for (const o of orphans) o.voucher_code = idToCode.get(o.resend_id!)!;
+
+  const combined = [...rows, ...orphans].sort((a, b) =>
+    a.created_at < b.created_at ? -1 : a.created_at > b.created_at ? 1 : 0
+  );
+  for (const r of combined) {
+    const code = r.voucher_code!;
+    if (!out[code]) continue;
+    const st = out[code];
+    if (r.type === "sent" || r.type === "resent") st.sentAt = r.created_at;
+    if (r.type === "delivered") st.deliveredAt = r.created_at;
+    if (r.type === "opened") st.openedAt = r.created_at;
+    if (r.type === "bounced") st.bouncedAt = r.created_at;
+    const cur = st.stage === "none" ? 0 : STAGE_ORDER[st.stage];
+    if (STAGE_ORDER[r.type] >= cur) st.stage = r.type;
+  }
+  return out;
+}
+
+export interface LeadWithVoucher {
+  lead: Lead;
+  voucher: Voucher | null;
+}
+
+export async function listLeadsWithVouchers(): Promise<LeadWithVoucher[]> {
+  const sb = getSupabaseAdmin();
+  if (sb) {
+    const { data: leads } = await sb
+      .from("winegarden_leads")
+      .select("*")
+      .order("created_at", { ascending: false });
+    const { data: vouchers } = await sb.from("winegarden_vouchers").select("*");
+    const vByLead = new Map<string, Voucher>();
+    for (const v of (vouchers as Voucher[]) ?? []) {
+      const prev = vByLead.get(v.lead_id);
+      if (!prev || prev.created_at < v.created_at) vByLead.set(v.lead_id, v);
+    }
+    return ((leads as Lead[]) ?? []).map((lead) => ({
+      lead,
+      voucher: vByLead.get(lead.id) ?? null,
+    }));
+  }
+  const leads = await readJson<Lead>(LEADS_FILE);
+  const vouchers = await readJson<Voucher>(VOUCHERS_FILE);
+  return leads
+    .slice()
+    .sort((a, b) => (a.created_at < b.created_at ? 1 : -1))
+    .map((lead) => ({
+      lead,
+      voucher:
+        vouchers
+          .filter((v) => v.lead_id === lead.id)
+          .sort((a, b) => (a.created_at < b.created_at ? 1 : -1))[0] ?? null,
+    }));
+}
+
+export async function findLeadById(id: string): Promise<Lead | null> {
+  const sb = getSupabaseAdmin();
+  if (sb) {
+    const { data } = await sb
+      .from("winegarden_leads")
+      .select("*")
+      .eq("id", id)
+      .maybeSingle();
+    return (data as Lead) ?? null;
+  }
+  const leads = await readJson<Lead>(LEADS_FILE);
+  return leads.find((l) => l.id === id) ?? null;
+}
+
+export async function updateLead(
+  id: string,
+  patch: Partial<Lead>
+): Promise<Lead | null> {
+  const sb = getSupabaseAdmin();
+  if (sb) {
+    const { data, error } = await sb
+      .from("winegarden_leads")
+      .update(patch)
+      .eq("id", id)
+      .select()
+      .maybeSingle();
+    if (error) throw new Error(error.message);
+    return (data as Lead) ?? null;
+  }
+  const leads = await readJson<Lead>(LEADS_FILE);
+  const idx = leads.findIndex((l) => l.id === id);
+  if (idx === -1) return null;
+  leads[idx] = { ...leads[idx], ...patch, id };
+  await writeJson(LEADS_FILE, leads);
+  return leads[idx];
+}
+
+export async function deleteLead(id: string): Promise<boolean> {
+  const sb = getSupabaseAdmin();
+  if (sb) {
+    const { data, error } = await sb
+      .from("winegarden_leads")
+      .delete()
+      .eq("id", id)
+      .select("id");
+    if (error) throw new Error(error.message);
+    return (data?.length ?? 0) > 0;
+  }
+  const leads = await readJson<Lead>(LEADS_FILE);
+  const next = leads.filter((l) => l.id !== id);
+  await writeJson(LEADS_FILE, next);
+  // Cascata manual no fallback JSON:
+  const vouchers = await readJson<Voucher>(VOUCHERS_FILE);
+  await writeJson(
+    VOUCHERS_FILE,
+    vouchers.filter((v) => v.lead_id !== id)
+  );
+  return next.length !== leads.length;
 }
 
 export type { Lead, LeadInput, Voucher };

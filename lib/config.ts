@@ -11,18 +11,18 @@ export const CAMPAIGN = {
 
 export const VENUE = {
   name: "Wine Garden",
-  address: "Wine Garden — Brasília, DF",
-  // Endereço completo exibido na seção de localização (ajustar com o real).
+  address: "Wine Garden — Pontão do Lago Sul, Brasília, DF",
+  // Endereço completo exibido na seção de localização.
   addressLines: [
     "Pontão do Lago Sul",
-    "SHIS QL 10, Lote 1/30 — Lago Sul",
+    "SHIS, Lote 24 — Lago Sul",
     "Brasília · DF",
   ],
   hours: "Ter a Dom · a partir das 18h",
-  // Coordenadas do mapa (placeholder no Pontão do Lago Sul — ajustar).
-  lat: -15.83862,
-  lng: -47.87155,
-  mapsUrl: "https://maps.google.com/?q=Wine+Garden+Bras%C3%ADlia",
+  // Coordenadas reais (Izzi Wine Garden — Pontão do Lago Sul).
+  lat: -15.8259315,
+  lng: -47.8713111,
+  mapsUrl: "https://maps.app.goo.gl/r8zjuKdnhuXKfubD8",
   whatsapp: "https://wa.me/5561999999999",
   instagram: "https://instagram.com/winegardenbsb",
   reservationUrl: "https://wa.me/5561999999999?text=Quero%20reservar%20uma%20mesa%20no%20Wine%20Garden",
