@@ -18,26 +18,33 @@ async function verify(
   payload: string,
   header: string
 ): Promise<boolean> {
-  const keyB64 = secret.replace(/^whsec_/, "");
-  const keyBytes = Uint8Array.from(atob(keyB64), (c) => c.charCodeAt(0));
-  const key = await crypto.subtle.importKey(
-    "raw",
-    keyBytes,
-    { name: "HMAC", hash: "SHA-256" },
-    false,
-    ["sign"]
-  );
-  const sig = await crypto.subtle.sign(
-    "HMAC",
-    key,
-    new TextEncoder().encode(`${id}.${ts}.${payload}`)
-  );
-  const expected = btoa(String.fromCharCode(...new Uint8Array(sig)));
-  // Header vem como "v1,<b64> v1,<b64>...": comparar com qualquer um.
-  return header
-    .split(" ")
-    .map((p) => p.split(",")[1])
-    .some((s) => s === expected);
+  // Qualquer erro aqui (secret malformado, base64 inválido, etc.) é tratado
+  // como assinatura inválida — nunca deve derrubar o endpoint com 500.
+  try {
+    const keyB64 = secret.replace(/^whsec_/, "");
+    const keyBytes = Uint8Array.from(atob(keyB64), (c) => c.charCodeAt(0));
+    const key = await crypto.subtle.importKey(
+      "raw",
+      keyBytes,
+      { name: "HMAC", hash: "SHA-256" },
+      false,
+      ["sign"]
+    );
+    const sig = await crypto.subtle.sign(
+      "HMAC",
+      key,
+      new TextEncoder().encode(`${id}.${ts}.${payload}`)
+    );
+    const expected = btoa(String.fromCharCode(...new Uint8Array(sig)));
+    // Header vem como "v1,<b64> v1,<b64>...": comparar com qualquer um.
+    return header
+      .split(" ")
+      .map((p) => p.split(",")[1])
+      .some((s) => s === expected);
+  } catch (e) {
+    console.error("[webhooks/resend] verificação de assinatura falhou", e);
+    return false;
+  }
 }
 
 export async function POST(req: NextRequest) {
@@ -52,7 +59,7 @@ export async function POST(req: NextRequest) {
     if (!ok) return NextResponse.json({ error: "bad_signature" }, { status: 401 });
   }
 
-  const evt = JSON.parse(payload) as {
+  let evt: {
     type: string;
     data?: {
       email_id?: string;
@@ -61,6 +68,11 @@ export async function POST(req: NextRequest) {
     };
     created_at?: string;
   };
+  try {
+    evt = JSON.parse(payload);
+  } catch {
+    return NextResponse.json({ error: "invalid_payload" }, { status: 400 });
+  }
 
   const type = MAP[evt.type];
   if (!type) return NextResponse.json({ ok: true, ignored: evt.type });
