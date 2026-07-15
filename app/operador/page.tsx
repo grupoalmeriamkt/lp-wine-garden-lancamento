@@ -54,26 +54,64 @@ export default function Operador() {
   }
 
   async function startScan() {
-    const Detector = (window as unknown as { BarcodeDetector?: any }).BarcodeDetector;
-    if (!Detector) { setMsg("Câmera não suportada neste navegador. Use o código manual."); return; }
+    if (!navigator.mediaDevices?.getUserMedia) {
+      setMsg("Câmera não disponível neste navegador. Use o código manual.");
+      return;
+    }
+    setMsg("");
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } });
+      const stream = await navigator.mediaDevices.getUserMedia({
+        video: { facingMode: "environment" },
+      });
       streamRef.current = stream;
       setScanning(true);
-      if (videoRef.current) { videoRef.current.srcObject = stream; await videoRef.current.play(); }
-      const detector = new Detector({ formats: ["qr_code"] });
+      const video = videoRef.current;
+      if (video) {
+        video.srcObject = stream;
+        video.setAttribute("playsinline", "true");
+        await video.play().catch(() => {});
+      }
+
+      // Caminho rápido: BarcodeDetector nativo (Android/Chrome).
+      // Fallback universal (iOS Safari não tem BarcodeDetector): jsQR sobre
+      // os frames da câmera desenhados num canvas.
+      const Detector = (window as unknown as { BarcodeDetector?: any }).BarcodeDetector;
+      const detector = Detector ? new Detector({ formats: ["qr_code"] }) : null;
+      type Decoder = (
+        d: Uint8ClampedArray,
+        w: number,
+        h: number
+      ) => { data: string } | null;
+      let decodeFrame: Decoder | null = null;
+      if (!detector) {
+        decodeFrame = (await import("jsqr")).default as unknown as Decoder;
+      }
+      const canvas = document.createElement("canvas");
+      const ctx = canvas.getContext("2d", { willReadFrequently: true });
+
       const tick = async () => {
-        if (!streamRef.current || !videoRef.current) return;
+        const v = videoRef.current;
+        if (!streamRef.current || !v) return;
         try {
-          const codes = await detector.detect(videoRef.current);
-          const found = codes.map((c: any) => extractCode(c.rawValue)).find(Boolean);
+          let found: string | null = null;
+          if (detector) {
+            const codes = await detector.detect(v);
+            found = codes.map((c: any) => extractCode(c.rawValue)).find(Boolean) ?? null;
+          } else if (decodeFrame && ctx && v.videoWidth) {
+            canvas.width = v.videoWidth;
+            canvas.height = v.videoHeight;
+            ctx.drawImage(v, 0, 0, canvas.width, canvas.height);
+            const img = ctx.getImageData(0, 0, canvas.width, canvas.height);
+            const r = decodeFrame(img.data, img.width, img.height);
+            if (r) found = extractCode(r.data);
+          }
           if (found) { stopScan(); await lookup(found); return; }
         } catch {}
         requestAnimationFrame(tick);
       };
       requestAnimationFrame(tick);
     } catch {
-      setMsg("Não foi possível acessar a câmera.");
+      setMsg("Não foi possível acessar a câmera. Verifique a permissão ou use o código manual.");
       setScanning(false);
     }
   }
@@ -93,7 +131,7 @@ export default function Operador() {
 
         {scanning ? (
           <>
-            <video ref={videoRef} playsInline style={{ width: "100%", borderRadius: 8, marginTop: 16, background: "#000" }} />
+            <video ref={videoRef} playsInline muted autoPlay style={{ width: "100%", borderRadius: 8, marginTop: 16, background: "#000" }} />
             <button className="btn" onClick={stopScan} style={{ width: "100%", justifyContent: "center", marginTop: 12 }}>Parar câmera</button>
           </>
         ) : (
