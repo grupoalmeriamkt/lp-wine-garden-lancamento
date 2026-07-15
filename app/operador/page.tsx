@@ -16,6 +16,7 @@ export default function Operador() {
   const [scanning, setScanning] = useState(false);
   const videoRef = useRef<HTMLVideoElement>(null);
   const streamRef = useRef<MediaStream | null>(null);
+  const rafRef = useRef<number | null>(null);
 
   async function lookup(code: string) {
     setBusy(true); setMsg(""); setVoucher(null);
@@ -48,6 +49,8 @@ export default function Operador() {
   }
 
   function stopScan() {
+    if (rafRef.current != null) cancelAnimationFrame(rafRef.current);
+    rafRef.current = null;
     streamRef.current?.getTracks().forEach((t) => t.stop());
     streamRef.current = null;
     setScanning(false);
@@ -64,13 +67,32 @@ export default function Operador() {
         video: { facingMode: "environment" },
       });
       streamRef.current = stream;
+      // O <video> só monta após este setState; a conexão do stream e o loop
+      // de leitura acontecem no useEffect abaixo, quando o elemento já existe.
+      // (No iOS, anexar o stream antes do vídeo montar deixa a tela preta.)
       setScanning(true);
-      const video = videoRef.current;
-      if (video) {
-        video.srcObject = stream;
-        video.setAttribute("playsinline", "true");
-        await video.play().catch(() => {});
-      }
+    } catch {
+      setMsg("Não foi possível acessar a câmera. Verifique a permissão ou use o código manual.");
+    }
+  }
+
+  // Conecta a câmera ao <video> e roda o loop de leitura DEPOIS que o vídeo
+  // monta no DOM. Essencial no iOS Safari.
+  useEffect(() => {
+    if (!scanning) return;
+    const video = videoRef.current;
+    const stream = streamRef.current;
+    if (!video || !stream) return;
+
+    let cancelled = false;
+    video.srcObject = stream;
+    video.muted = true; // iOS: precisa ser setado no DOM, não só via prop React
+    video.setAttribute("playsinline", "true");
+
+    const run = async () => {
+      try {
+        await video.play();
+      } catch {}
 
       // Caminho rápido: BarcodeDetector nativo (Android/Chrome).
       // Fallback universal (iOS Safari não tem BarcodeDetector): jsQR sobre
@@ -90,33 +112,41 @@ export default function Operador() {
       const ctx = canvas.getContext("2d", { willReadFrequently: true });
 
       const tick = async () => {
-        const v = videoRef.current;
-        if (!streamRef.current || !v) return;
+        if (cancelled || !streamRef.current) return;
         try {
           let found: string | null = null;
           if (detector) {
-            const codes = await detector.detect(v);
+            const codes = await detector.detect(video);
             found = codes.map((c: any) => extractCode(c.rawValue)).find(Boolean) ?? null;
-          } else if (decodeFrame && ctx && v.videoWidth) {
-            canvas.width = v.videoWidth;
-            canvas.height = v.videoHeight;
-            ctx.drawImage(v, 0, 0, canvas.width, canvas.height);
+          } else if (decodeFrame && ctx && video.videoWidth) {
+            canvas.width = video.videoWidth;
+            canvas.height = video.videoHeight;
+            ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
             const img = ctx.getImageData(0, 0, canvas.width, canvas.height);
             const r = decodeFrame(img.data, img.width, img.height);
             if (r) found = extractCode(r.data);
           }
           if (found) { stopScan(); await lookup(found); return; }
         } catch {}
-        requestAnimationFrame(tick);
+        rafRef.current = requestAnimationFrame(tick);
       };
-      requestAnimationFrame(tick);
-    } catch {
-      setMsg("Não foi possível acessar a câmera. Verifique a permissão ou use o código manual.");
-      setScanning(false);
-    }
-  }
+      rafRef.current = requestAnimationFrame(tick);
+    };
+    run();
 
-  useEffect(() => () => stopScan(), []);
+    return () => {
+      cancelled = true;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [scanning]);
+
+  // Ao desmontar, garante que a câmera é desligada.
+  useEffect(() => {
+    return () => {
+      if (rafRef.current != null) cancelAnimationFrame(rafRef.current);
+      streamRef.current?.getTracks().forEach((t) => t.stop());
+    };
+  }, []);
 
   const statusLabel: Record<string, string> = {
     active: "Ativo — pode resgatar", redeemed: "Já resgatado",
