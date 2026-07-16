@@ -2,6 +2,7 @@
 import { use, useEffect, useState } from "react";
 import { glassLabel } from "@/lib/glasses";
 import type { Voucher } from "@/lib/types";
+import SponsorLogos from "@/components/SponsorLogos";
 
 type State =
   | { s: "loading" }
@@ -76,6 +77,12 @@ export default function ValidarPage({
             )}
           </>
         )}
+
+        <hr className="dotted" style={{ margin: "24px 0 18px" }} />
+        <p className="mono-label" style={{ color: "var(--uva-70)", textAlign: "center", marginBottom: 12 }}>
+          Oferecimento
+        </p>
+        <SponsorLogos showApoioLabel />
       </div>
     </main>
   );

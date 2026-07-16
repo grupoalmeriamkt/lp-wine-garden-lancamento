@@ -104,6 +104,10 @@ export function buildVoucherEmailHtml(d: VoucherEmailData): string {
           <tr><td>• Válido somente para maiores de 18 anos.</td></tr>
           <tr><td>• Rótulos sujeitos à disponibilidade.</td></tr>
         </table>
+
+        <!-- Patrocinadores -->
+        <hr style="border:none;border-top:1px dashed ${C.bege};margin:24px 0 16px;">
+        ${sponsorStrip(d.logoUrl)}
       </td></tr>
 
       <!-- Endereço -->
@@ -132,6 +136,30 @@ export function buildVoucherEmailHtml(d: VoucherEmailData): string {
 </table>
 </body>
 </html>`;
+}
+
+/**
+ * Faixa "Oferecimento" com as bandeiras (Caixa/Visa/Elo), dentro do card claro
+ * para bom contraste. Usa PNG + URLs absolutas + width/height explícitos porque
+ * clientes de e-mail (Outlook) não suportam WebP nem caminhos relativos.
+ */
+function sponsorStrip(logoUrl: string): string {
+  let base: string;
+  try {
+    base = `${new URL(logoUrl).origin}/brand/sponsors`;
+  } catch {
+    return ""; // sem origem absoluta confiável, não arrisca imagem quebrada
+  }
+  const logo = (file: string, alt: string, w: number, h: number) =>
+    `<td valign="middle" style="padding:0 13px;"><img src="${base}/${file}" width="${w}" height="${h}" alt="${alt}" style="display:block;border:0;width:${w}px;height:${h}px;"></td>`;
+  return `<p style="margin:0 0 12px;font-family:${MONO};font-size:11px;letter-spacing:2px;text-transform:uppercase;color:rgba(63,10,37,0.6);text-align:center;">Oferecimento</p>
+        <table role="presentation" align="center" cellpadding="0" cellspacing="0" style="margin:0 auto;">
+          <tr>
+            ${logo("caixa.png", "Cartões Caixa", 83, 26)}
+            ${logo("visa.png", "Visa", 62, 20)}
+            ${logo("elo.png", "Elo", 77, 24)}
+          </tr>
+        </table>`;
 }
 
 function row(label: string, value: string, mono = false): string {
