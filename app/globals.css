@@ -313,12 +313,12 @@ h1, h2, h3 { font-family: var(--serif); font-weight: 400; margin: 0; line-height
   max-width: none;
   object-fit: contain;
 }
-.sponsor-logos__logo--caixa { height: 38px; }
-.sponsor-logos__logo--visa { height: 22px; }
-.sponsor-logos__logo--elo { height: 22px; }
-.sponsor-logos--compact .sponsor-logos__logo--caixa { height: 30px; }
-.sponsor-logos--compact .sponsor-logos__logo--visa { height: 18px; }
-.sponsor-logos--compact .sponsor-logos__logo--elo { height: 18px; }
+.sponsor-logos__logo--caixa { height: 44px; }
+.sponsor-logos__logo--visa { height: 20px; }
+.sponsor-logos__logo--elo { height: 20px; }
+.sponsor-logos--compact .sponsor-logos__logo--caixa { height: 34px; }
+.sponsor-logos--compact .sponsor-logos__logo--visa { height: 16px; }
+.sponsor-logos--compact .sponsor-logos__logo--elo { height: 16px; }
 .sponsor-logos__support {
   color: var(--purpura);
   margin: 0;
