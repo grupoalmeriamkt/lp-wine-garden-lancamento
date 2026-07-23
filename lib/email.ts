@@ -139,9 +139,9 @@ export function buildVoucherEmailHtml(d: VoucherEmailData): string {
 }
 
 /**
- * Faixa "Oferecimento" com as bandeiras (Caixa/Visa/Elo), dentro do card claro
- * para bom contraste. Usa PNG + URLs absolutas + width/height explícitos porque
- * clientes de e-mail (Outlook) não suportam WebP nem caminhos relativos.
+ * Faixa "Oferecimento" com a logo Cartões Caixa, dentro do card claro para bom
+ * contraste. Usa PNG + URL absoluta + width/height explícitos porque clientes
+ * de e-mail (Outlook) não suportam WebP nem caminhos relativos.
  */
 function sponsorStrip(logoUrl: string): string {
   let base: string;
@@ -150,17 +150,9 @@ function sponsorStrip(logoUrl: string): string {
   } catch {
     return ""; // sem origem absoluta confiável, não arrisca imagem quebrada
   }
-  const img = (file: string, alt: string, w: number, h: number) =>
-    `<img src="${base}/${file}" width="${w}" height="${h}" alt="${alt}" style="display:block;border:0;width:${w}px;height:${h}px;">`;
-  // Caixa (oferecimento) recebe destaque no topo; Visa e Elo (apoio) entram
-  // iguais e menores na linha de baixo.
   return `<p style="margin:0 0 14px;font-family:${MONO};font-size:11px;letter-spacing:2px;text-transform:uppercase;color:rgba(63,10,37,0.6);text-align:center;">Oferecimento</p>
         <table role="presentation" align="center" cellpadding="0" cellspacing="0" style="margin:0 auto;">
-          <tr><td colspan="2" align="center" style="padding-bottom:16px;">${img("caixa.png", "Cartões Caixa", 122, 38)}</td></tr>
-          <tr>
-            <td valign="middle" align="center" style="padding:0 16px;">${img("visa.png", "Visa", 55, 18)}</td>
-            <td valign="middle" align="center" style="padding:0 16px;">${img("elo.png", "Elo", 58, 18)}</td>
-          </tr>
+          <tr><td align="center"><img src="${base}/caixa.png" width="122" height="38" alt="Cartões Caixa" style="display:block;border:0;width:122px;height:38px;"></td></tr>
         </table>`;
 }
 

@@ -314,22 +314,7 @@ h1, h2, h3 { font-family: var(--serif); font-weight: 400; margin: 0; line-height
   object-fit: contain;
 }
 .sponsor-logos__logo--caixa { height: 44px; }
-.sponsor-logos__logo--visa { height: 20px; }
-.sponsor-logos__logo--elo { height: 20px; }
 .sponsor-logos--compact .sponsor-logos__logo--caixa { height: 34px; }
-.sponsor-logos--compact .sponsor-logos__logo--visa { height: 16px; }
-.sponsor-logos--compact .sponsor-logos__logo--elo { height: 16px; }
-.sponsor-logos__support {
-  color: var(--purpura);
-  margin: 0;
-  text-align: center;
-}
-.sponsor-logos__partners {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: clamp(24px, 5vw, 40px);
-}
 
 .campaign-period {
   max-width: 560px;

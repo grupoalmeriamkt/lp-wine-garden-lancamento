@@ -30,6 +30,4 @@ export const VENUE = {
 
 export const SPONSORS = {
   caixa: { name: "Cartões Caixa", logo: "/brand/sponsors/caixa.png", height: 44 },
-  visa: { name: "Visa", logo: "/brand/sponsors/visa.png", height: 20 },
-  elo: { name: "Elo", logo: "/brand/sponsors/elo.png", height: 20 },
 } as const;

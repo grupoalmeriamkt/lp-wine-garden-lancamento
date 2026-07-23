@@ -39,7 +39,7 @@ export default function Sponsors() {
         <Reveal delay={120}>
           <div className="sponsors-ticket stamp-border" aria-label="Patrocinadores">
             <p className="mono-label sponsors-ticket__label">Oferecimento</p>
-            <SponsorLogos showApoioLabel />
+            <SponsorLogos />
           </div>
         </Reveal>
       </div>

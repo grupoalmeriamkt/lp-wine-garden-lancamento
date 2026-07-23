@@ -82,7 +82,7 @@ export default function ValidarPage({
         <p className="mono-label" style={{ color: "var(--uva-70)", textAlign: "center", marginBottom: 12 }}>
           Oferecimento
         </p>
-        <SponsorLogos showApoioLabel />
+        <SponsorLogos />
       </div>
     </main>
   );

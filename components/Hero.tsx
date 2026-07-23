@@ -120,7 +120,7 @@ export default function Hero({ onCta }: { onCta: () => void }) {
               Escolher minha taça →
             </button>
             <div className="hero-sponsors">
-              <p className="tiny muted hero-sponsors__label">Oferecimento Caixa, apoio Visa e Elo</p>
+              <p className="tiny muted hero-sponsors__label">Oferecimento Caixa</p>
               <SponsorLogos compact />
             </div>
           </div>

@@ -104,7 +104,7 @@ export default function VoucherCard({
 
           <div className="voucher-sponsors" aria-label="Patrocinadores">
             <p className="mono-label voucher-sponsors__label">Oferecimento</p>
-            <SponsorLogos showApoioLabel />
+            <SponsorLogos />
           </div>
         </div>
 
